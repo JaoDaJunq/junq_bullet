@@ -4,7 +4,7 @@ Protótipo web de Bullet Heaven / Survivors-like para PC e celular. Sem backend,
 
 ## Rodar
 
-Abra `index.html` no navegador ou publique a branch `main` pelo GitHub Pages. O jogo não usa bibliotecas externas.
+Baixe o ZIP do repositório, extraia e abra `index.html` no navegador. Também pode servir a pasta com `python -m http.server` ou publicar a branch `main` pelo GitHub Pages. O jogo não usa bibliotecas externas.
 
 ## Controles
 
