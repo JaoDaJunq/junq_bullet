@@ -9,7 +9,7 @@
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultFill: $('ult-fill')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0;
-  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0;
+  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [];
   const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0 };
   const atlas = new Image();
@@ -40,7 +40,7 @@
   }
   setMode('menu');
   function reset() {
-    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0;
+    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = 0;
     Object.assign(player, { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0 });
     ui.chest.classList.add('hidden'); setMode('running'); updateHud();
@@ -83,13 +83,13 @@
   function fire(target, damage = player.damage, speed = 440, color = '#54dcff') {
     if (!target) return;
     const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1;
-    bullets.push({ x: player.x, y: player.y, vx: dx / len * speed, vy: dy / len * speed, damage, life: 1.5, color, r: 6 });
-    emit(player.x + dx / len * 14, player.y + dy / len * 14, color, 2, .35); sound(680, .045, 'triangle', .018);
+    bullets.push({ x: player.x, y: player.y, vx: dx / len * speed, vy: dy / len * speed, damage, life: 1.5, color, r: 6, age: 0, trail: [], phase: rand(0, 6.28) });
+    emit(player.x + dx / len * 14, player.y + dy / len * 14, '#c9f8ff', 4, .45); sound(680, .045, 'triangle', .018);
   }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
-    player.ult = player.ultMax; emit(player.x, player.y, '#74e5ff', 46, 2.5); sound(170, .42, 'sawtooth', .05);
-    for (const e of enemies) { if (dist2(player, e) < 390 ** 2) { e.hp -= player.damage * 4.2; e.hit = .18; floatText(e.x, e.y - 20, '⚡', '#89edff'); if (e.hp <= 0) defeat(e); } }
+    player.ult = player.ultMax; ultimateVfx = { x: player.x, y: player.y, life: 1.05, max: 1.05, targets: enemies.filter(e => dist2(player, e) < 390 ** 2).map(e => ({ x: e.x, y: e.y, phase: rand(0, 6.28) })) }; emit(player.x, player.y, '#b9f7ff', 58, 2.8); sound(170, .42, 'sawtooth', .05);
+    for (const e of enemies) { if (dist2(player, e) < 390 ** 2) { e.hp -= player.damage * 4.2; e.hit = .22; emit(e.x, e.y, '#c5faff', 9, .9); floatText(e.x, e.y - 20, '⚡', '#89edff'); if (e.hp <= 0) defeat(e); } }
     for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) enemies.splice(i, 1);
     showToast('ULTIMATE: TEMPESTA ELÉTRICA!');
   }
@@ -110,7 +110,7 @@
   function openChest() { chest.opened = true; chestProgress = 0; const reward = [...upgrades].sort(() => Math.random() - .5)[0]; reward.apply(); player.hp = Math.min(player.maxHp, player.hp + 18); emit(chest.x, chest.y, '#ffd66e', 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, reward.title, '#ffe69a'); showToast(`Baú aberto: ${reward.title}!`); chest = null; }
 
   function update(dt) {
-    elapsed += dt; player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt);
+    elapsed += dt; player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt); if (ultimateVfx && (ultimateVfx.life -= dt) <= 0) ultimateVfx = null;
     let ix = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + joyX;
     let iy = (keys.has('s') || keys.has('arrowdown') ? 1 : 0) - (keys.has('w') || keys.has('arrowup') ? 1 : 0) + joyY;
     const il = Math.hypot(ix, iy); if (il > 1) { ix /= il; iy /= il; }
@@ -125,7 +125,7 @@
       e.x += dx / len * e.speed * dt; e.y += dy / len * e.speed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
       if (len < e.radius + 17 && player.invuln <= 0) { player.hp -= e.damage; player.invuln = .62; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); }
     }
-    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (dist2(b, e) < (e.radius + b.r) ** 2) { e.hp -= b.damage; e.hit = .12; emit(b.x, b.y, b.color, 4, .45); floatText(e.x, e.y - e.radius, `${Math.round(b.damage)}`, '#bdf4ff'); gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } } if (gone) bullets.splice(i, 1); }
+    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (dist2(b, e) < (e.radius + b.r) ** 2) { e.hp -= b.damage; e.hit = .12; emit(b.x, b.y, '#d7fbff', 8, .62); floatText(e.x, e.y - e.radius, `${Math.round(b.damage)}`, '#bdf4ff'); gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } } if (gone) bullets.splice(i, 1); }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value); emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     chestTimer -= dt; if (!chest && chestTimer <= 0) { spawnChest(); chestTimer = 45; }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
@@ -145,6 +145,36 @@
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
   function drawChest() { if (!chest) return; const p = screenPos(chest); ctx.save(); ctx.translate(p.x,p.y+Math.sin(chest.pulse)*3); ctx.shadowColor='#ffc85d';ctx.shadowBlur=22;ctx.fillStyle='#b96d26';ctx.fillRect(-15,-10,30,22);ctx.shadowBlur=0;ctx.fillStyle='#edb84e';ctx.fillRect(-16,-14,32,9);ctx.fillStyle='#78421d';ctx.fillRect(-3,-7,6,17);ctx.fillStyle='#fff0a0';ctx.fillRect(-2,-7,4,5);ctx.restore(); }
+  function drawUltimate() {
+    if (!ultimateVfx) return;
+    const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .42, 0, 1), radius = 390 * Math.min(1, progress * 1.55);
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let ring = 0; ring < 3; ring++) {
+      const r = Math.max(2, radius - ring * 25), alpha = fade * (1 - ring * .22) * (.42 + Math.sin(progress * 18 + ring) * .12);
+      ctx.globalAlpha = alpha; ctx.strokeStyle = ring === 1 ? '#bffaff' : '#42dfff'; ctx.lineWidth = ring === 1 ? 2.5 : 5 - ring;
+      ctx.shadowColor = '#55eaff'; ctx.shadowBlur = 20; ctx.beginPath(); ctx.arc(p.x, p.y, r, progress * 2.8 + ring * .7, progress * 2.8 + ring * .7 + Math.PI * 1.86); ctx.stroke();
+    }
+    ctx.shadowBlur = 16; ctx.globalAlpha = fade * .85;
+    for (const target of v.targets) {
+      const q = screenPos(target), dx = q.x - p.x, dy = q.y - p.y, len = Math.hypot(dx, dy) || 1, reach = Math.min(1, progress * 2.8);
+      const endX = p.x + dx * reach, endY = p.y + dy * reach, segments = 7, seed = Math.sin(target.phase + progress * 41) * 7;
+      ctx.strokeStyle = '#a7f6ff'; ctx.lineWidth = 2.6; ctx.beginPath(); ctx.moveTo(p.x, p.y);
+      for (let s = 1; s < segments; s++) { const t = s / segments, offset = Math.sin(target.phase + s * 9.2 + progress * 36) * Math.min(13, len * .055); ctx.lineTo(p.x + dx * t - dy / len * (offset + seed), p.y + dy * t + dx / len * (offset + seed)); }
+      ctx.lineTo(endX, endY); ctx.stroke();
+      ctx.fillStyle = '#e7ffff'; ctx.beginPath(); ctx.arc(endX, endY, 3.2 + Math.sin(progress * 30 + target.phase) * 1.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = fade * (1 - progress * .35); ctx.fillStyle = '#dffcff'; ctx.shadowBlur = 30; ctx.beginPath(); ctx.arc(p.x, p.y, 8 + progress * 9, 0, Math.PI * 2); ctx.fill();
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
+  function drawBullet(b) {
+    const p = screenPos(b); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = b.trail.length - 1; i >= 0; i--) { const q = screenPos(b.trail[i]), fade = (1 - i / b.trail.length) * .48; ctx.globalAlpha = fade; ctx.fillStyle = i < 2 ? '#e3fcff' : b.color; ctx.shadowColor = b.color; ctx.shadowBlur = 13; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, b.r * (1 - i / (b.trail.length + 1)) * .72), 0, Math.PI * 2); ctx.fill(); }
+    ctx.globalAlpha = 1; ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(b.vy, b.vx)); ctx.shadowColor = b.color; ctx.shadowBlur = 24;
+    ctx.fillStyle = b.color; ctx.beginPath(); ctx.ellipse(0, 0, b.r * 1.75, b.r * .9, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f2ffff'; ctx.shadowColor = '#ffffff'; ctx.shadowBlur = 16; ctx.beginPath(); ctx.ellipse(1, 0, b.r * .82, b.r * .48, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.rotate(Math.sin(b.phase) * .35); ctx.strokeStyle = '#aaf5ff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(-b.r * 2.5, 0); ctx.lineTo(-b.r * 1.8, -3); ctx.lineTo(-b.r * 1.2, 2); ctx.stroke();
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);ctx.shadowColor=e.color;ctx.shadowBlur=10;ctx.fillStyle=e.hit?'#fff':e.color;
     if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
     else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
@@ -160,8 +190,8 @@
   function render() {
     ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor();
     for(const o of xpOrbs){const p=screenPos(o);ctx.shadowColor='#51d7ff';ctx.shadowBlur=15;ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();ctx.shadowBlur=0;}
-    drawChest(); for(const b of bullets){const p=screenPos(b);ctx.shadowColor=b.color;ctx.shadowBlur=18;ctx.fillStyle=b.color;ctx.beginPath();ctx.arc(p.x,p.y,b.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
-    for(const e of enemies)drawEnemy(e); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
+    drawChest(); for(const b of bullets) drawBullet(b);
+    for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
     drawPlayer(); for(const f of floating){const p=screenPos(f);ctx.globalAlpha=clamp(f.life/.8,0,1);ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillStyle=f.color;ctx.fillText(f.text,p.x,p.y);}ctx.globalAlpha=1;
   }
   function loop(t) { const dt=Math.min(.033,(t-last)/1000||0);last=t;if(state==='running')update(dt);render();requestAnimationFrame(loop); }
