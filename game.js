@@ -17,6 +17,10 @@
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const plaza = new Image();
+  const sceneCanvas = document.createElement('canvas');
+  const sceneCtx = sceneCanvas.getContext('2d', { alpha: false });
+  let sceneCacheScale = 0;
+  plaza.onload = buildSceneCache;
   plaza.src = 'assets/plaza-night.webp';
   let joystickPointer = null, joyX = 0, joyY = 0;
   let audioCtx;
@@ -24,12 +28,19 @@
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const dist2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+  function buildSceneCache() {
+    const side = Math.min(arena.size, Math.max(1536, Math.min(2048, Math.round(Math.max(w, h) * 1.5))));
+    sceneCanvas.width = side; sceneCanvas.height = side;
+    sceneCtx.imageSmoothingEnabled = true; sceneCtx.imageSmoothingQuality = 'high';
+    sceneCtx.drawImage(plaza, 0, 0, side, side); sceneCacheScale = side / arena.size;
+  }
 
   function resize() {
     dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
     arena.size = Math.ceil(Math.max(3600, w + 96, h + 96) / 16) * 16;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
+    if (plaza.complete && plaza.naturalWidth) buildSceneCache();
   }
   addEventListener('resize', resize); resize();
   const mobile = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
@@ -148,10 +159,10 @@
 
   function drawFloor() {
     ctx.fillStyle = '#111923'; ctx.fillRect(0, 0, w, h);
-    if (plaza.complete && plaza.naturalWidth) {
-      const x = Math.round(w / 2 - cameraX), y = Math.round(h / 2 - cameraY);
+    if (sceneCacheScale > 0) {
+      const sx = (cameraX - w / 2) * sceneCacheScale, sy = (cameraY - h / 2) * sceneCacheScale;
       ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'medium';
-      ctx.drawImage(plaza, x, y, arena.size, arena.size); ctx.restore();
+      ctx.drawImage(sceneCanvas, sx, sy, w * sceneCacheScale, h * sceneCacheScale, 0, 0, w, h); ctx.restore();
       ctx.fillStyle = 'rgba(5, 12, 24, .12)'; ctx.fillRect(0, 0, w, h);
     }
   }
