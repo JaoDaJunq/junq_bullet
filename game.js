@@ -134,7 +134,7 @@
     if (toastTimer > 0 && (toastTimer -= dt) <= 0) ui.toast.classList.add('hidden');
     updateHud();
   }
-  function gameOver() { player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level; const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); setMode('gameover'); }
+  function gameOver() { player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level; try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {} setMode('gameover'); }
   function updateHud() { ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`; ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills; ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`; }
 
   function drawFloor() {
