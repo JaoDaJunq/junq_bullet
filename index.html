@@ -19,20 +19,24 @@
   </header>
   <div id="toast" class="toast hidden"></div>
   <div id="chest-status" class="chest-status hidden"><span id="chest-label">Fica parado para abrir</span><div class="meter"><i id="chest-fill"></i></div></div>
+  <div id="pickup-status" class="pickup-status hidden"><span class="pickup-gem">✦</span><span id="pickup-label">Item no chão</span></div>
   <div id="joystick" class="joystick hidden"><div id="stick"></div></div>
   <button id="ultimate-button" class="ultimate hidden"><span>⚡</span><small>ULT</small><i id="ult-fill"></i></button>
 
   <main id="screen" class="screen">
-    <section id="menu" class="panel">
+    <section id="menu" class="panel menu-panel">
+      <div class="brand-badge"><b>J</b><span>ADAPT · SOBREVIVÊNCIA</span></div>
       <div class="eyebrow">JUNQ STUDIOS · PROTÓTIPO JOGÁVEL</div>
       <h1>JUNQ <em>BULLET</em></h1>
       <p>Segura a horda. Cresce. Não para.</p>
+      <div class="arena-label"><i></i> PRAÇA URBANA · NOITE</div>
       <div class="feature-row"><span>⚡ tiro automático</span><span>↑ evolução</span><span>▣ baús</span></div>
-      <button id="start-button" class="primary">COMEÇAR A PARTIDA</button>
+      <button id="start-button" class="primary"><span>COMEÇAR A PARTIDA</span><b>↗</b></button>
       <small class="help">PC: WASD / setas · Espaço: ultimate · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate</small>
     </section>
     <section id="upgrade-panel" class="panel hidden">
-      <div class="eyebrow">NOVO NÍVEL</div><h2>Escolhe uma melhoria</h2>
+      <div class="eyebrow">NÍVEL ALCANÇADO · ESCOLHE 1</div><h2>Qual vai ser teu próximo poder?</h2>
+      <p class="upgrade-hint">A horda espera. Usa <b>1, 2 ou 3</b> no teclado para escolher.</p>
       <div id="upgrade-options" class="cards"></div>
     </section>
     <section id="pause-panel" class="panel hidden"><div class="eyebrow">PAUSA</div><h2>Respira, MVP.</h2><button id="resume-button" class="primary">CONTINUAR</button></section>
