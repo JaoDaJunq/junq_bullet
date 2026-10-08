@@ -19,7 +19,7 @@
   </header>
   <div id="toast" class="toast hidden"></div>
   <div id="desktop-ultimate" class="desktop-ultimate hidden" aria-live="polite">
-    <span class="desktop-ultimate-icon">⚡</span>
+    <span id="desktop-ultimate-icon" class="desktop-ultimate-icon">⚡</span>
     <div class="desktop-ultimate-info"><div class="desktop-ultimate-label"><b>ULTIMATE</b><span id="desktop-ult-status">PRONTA</span></div><div class="desktop-ultimate-meter"><i id="desktop-ult-fill"></i></div><small>ESPAÇO</small></div>
   </div>
   <div id="chest-status" class="chest-status hidden"><span id="chest-label">Fica parado para abrir</span><div class="meter"><i id="chest-fill"></i></div></div>
@@ -41,7 +41,7 @@
       <div class="arena-label"><i></i> ARENA PROCEDURAL · NOITE</div>
       <div class="feature-row"><span>⚡ tiro automático</span><span>↑ evolução</span><span>▣ baús</span></div>
       <button id="start-button" class="primary"><span>ESCOLHER PERSONAGEM</span><b>↗</b></button>
-      <small class="help">PC: WASD / setas · Espaço: ultimate (Alice: avança o esmalte) · F: usar torrada · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate/esmalte da Alice · torrada: curar</small>
+      <small class="help">PC: WASD / setas · Espaço: ultimate · F: usar torrada · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate · torrada: curar</small>
     </section>
     <section id="character-select" class="panel hidden character-panel">
       <div class="eyebrow">ESCOLHE TEU SOBREVIVENTE</div>
@@ -60,6 +60,13 @@
           <span class="character-weapon">ARRANHÃO DE NAIL ART</span>
           <span class="character-description">Cada ultimate avança o esmalte: verde envenena, azul reduz velocidade, vermelho rouba vida e rosa marca o alvo, que recebe +25% de dano por 4s.</span>
           <span class="character-selected-label">SELECIONAR ALICE</span>
+        </button>
+        <button id="character-gui" class="character-card" type="button" aria-pressed="false">
+          <span class="character-art character-art-gui" aria-hidden="true"></span>
+          <span class="character-name">GUI</span>
+          <span class="character-weapon">RAJADA DE CARTAS</span>
+          <span class="character-description">Atira cinco cartas num cone na direção do inimigo mais próximo. A ultimate, Mão de Trunfo, abre um leque largo que perfura e atordoa a horda.</span>
+          <span class="character-selected-label">SELECIONAR GUI</span>
         </button>
       </div>
       <div class="character-actions">

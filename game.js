@@ -44,7 +44,7 @@
     hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
     options: $('upgrade-options'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
-    pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
+    pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltIcon: $('desktop-ultimate-icon'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
@@ -58,6 +58,8 @@
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
   aliceAtlas.src = 'assets/alice-walk.png';
+  const guiAtlas = new Image();
+  guiAtlas.src = 'assets/gui-walk.png';
   const enemySprites = {};
   for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
   const toastSprite = new Image();
@@ -98,12 +100,12 @@
   }
   function selectCharacter(character) {
     selectedCharacter = character;
-    for (const id of ['jao', 'alice']) {
+    for (const id of ['jao', 'alice', 'gui']) {
       const card = $(`character-${id}`), active = id === character;
       card.classList.toggle('selected', active); card.setAttribute('aria-pressed', String(active));
       card.querySelector('.character-selected-label').textContent = active ? 'SELECIONADO' : `ESCOLHER ${id.toUpperCase()}`;
     }
-    $('play-button').textContent = `JOGAR COM ${character === 'alice' ? 'ALICE' : 'JÃO'}`;
+    $('play-button').textContent = `JOGAR COM ${character === 'alice' ? 'ALICE' : character === 'gui' ? 'GUI' : 'JÃO'}`;
   }
   setMode('menu');
   function reset() {
@@ -111,12 +113,14 @@
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
   $('start-button').addEventListener('click', () => setMode('select'));
   $('back-to-menu').addEventListener('click', () => setMode('menu'));
   $('character-jao').addEventListener('click', () => selectCharacter('jao'));
   $('character-alice').addEventListener('click', () => selectCharacter('alice'));
+  $('character-gui').addEventListener('click', () => selectCharacter('gui'));
   $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
@@ -176,6 +180,29 @@
     if (color === '#54dcff' || scratch) { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(origin.x + dx / len * 14, origin.y + dy / len * 14, color === '#54dcff' ? '#c9f8ff' : color, 4, .45); sound(680, .045, 'triangle', .018);
   }
+  function fireCardVolley(target, options = {}) {
+    if (!target && !options.allowNoTarget) return;
+    let aimX = player.aimX, aimY = player.aimY;
+    if (target) {
+      const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1;
+      aimX = dx / len; aimY = dy / len; player.aimX = aimX; player.aimY = aimY;
+    } else if (Math.hypot(player.vx, player.vy) > 20) {
+      const len = Math.hypot(player.vx, player.vy); aimX = player.vx / len; aimY = player.vy / len;
+      player.aimX = aimX; player.aimY = aimY;
+    }
+    const center = Math.atan2(aimY, aimX), count = options.count || Math.min(13, 5 + (player.multishot - 1) * 2), spread = options.spread ?? .88;
+    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .8);
+    for (let i = 0; i < count; i++) {
+      const angle = center + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
+      const cardColor = options.ultimate ? (i % 2 ? '#ffd16b' : '#fff0ce') : (i % 2 ? '#f25566' : '#f4ead0');
+      bullets.push({ x: player.x + aimX * 15, y: player.y + aimY * 15, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+        damage, life: options.life || 1.3, color: cardColor, card: true, ultimate: !!options.ultimate, stun: options.stun || 0,
+        r: options.ultimate ? 8 : 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: options.pierce ?? player.pierce, hitEnemies: sharedHits });
+    }
+    player.shotFlash = options.ultimate ? .42 : .14;
+    emit(player.x + aimX * 18, player.y + aimY * 18, options.ultimate ? '#ffd16b' : '#fff0ce', options.ultimate ? 30 : 6, options.ultimate ? 1.25 : .45);
+    sound(options.ultimate ? 510 : 760, options.ultimate ? .25 : .05, options.ultimate ? 'triangle' : 'square', options.ultimate ? .055 : .025);
+  }
   function startUltimateCooldown() { player.ult = player.ultMax * Math.max(.1, 1 - batteryReserved); batteryReserved = 0; }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
@@ -186,6 +213,14 @@
       emit(player.x, player.y, element.color, 24, 1.25); floatText(player.x, player.y - 44, element.short, element.color);
       sound(540, .22, 'triangle', .045); showToast(`Esmalte ${element.name}: ${element.id === 'poison' ? 'veneno' : element.id === 'slow' ? 'lentidão' : element.id === 'lifesteal' ? 'roubo de vida' : 'inimigos recebem mais dano'}.`);
       updateHud(); return;
+    }
+    if (player.character === 'gui') {
+      const target = nearestEnemy();
+      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1.55, life: 1.4, pierce: 99, stun: .9, ultimate: true });
+      const angle = Math.atan2(player.aimY, player.aimX); startUltimateCooldown();
+      ultimateVfx = { x: player.x, y: player.y, radius: 330, spread: 1.92, angle, life: .62, max: .62, targets: [], color: '#ffd16b', type: 'cardFan' };
+      emit(player.x, player.y, '#ffd16b', 28, 1.5); floatText(player.x, player.y - 46, 'MÃO DE TRUNFO!', '#ffe39a');
+      showToast('MÃO DE TRUNFO: leque perfurante com atordoamento!'); updateHud(); return;
     }
     const radius = player.ultRadius, radius2 = radius * radius;
     const chainTargets = enemies.filter(e => dist2(player, e) < radius2).sort((a, b) => b.hp - a.hp).slice(0, 4);
@@ -295,7 +330,7 @@
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
     if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
-    fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
+    fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') fireCardVolley(target); else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); } fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) { const origin = petWorldPosition(c); fire(nearestEnemy(origin), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff', 1, null, false, origin); } companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
@@ -307,7 +342,7 @@
       const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
       if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); } }
     }
-    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
+    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; if (!b.card) { b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); } b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; if (b.stun) { e.stun = Math.max(e.stun || 0, b.stun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); } applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : b.card ? '#ffe4a1' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value * (doubleXpOrbs > 0 ? 2 : 1)); if (doubleXpOrbs > 0) doubleXpOrbs--; emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     if (!chest) { chestTimer -= dt; if (chestTimer <= 0) { spawnChest(); chestTimer = 80; } }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
@@ -326,9 +361,13 @@
     ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`;
     ui.desktopUltFill.style.width = `${clamp((1 - player.ult / player.ultMax) * 100, 0, 100)}%`; ui.desktopUltStatus.textContent = player.ult > 0 ? `${Math.ceil(player.ult)}S` : 'PRONTA'; ui.desktopUlt.classList.toggle('is-charging', player.ult > 0);
     const element = player.nailElement >= 0 ? aliceElements[player.nailElement] : null;
-    ui.ultIcon.textContent = player.character === 'alice' ? '💅' : '⚡'; ui.ultLabel.textContent = player.character === 'alice' ? (element?.short || 'NAT') : 'ULT';
-    ui.ult.setAttribute('aria-label', player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : 'Ultimate de choque');
-    ui.ult.style.setProperty('--element-color', element?.color || '#dfe8ef'); ui.ult.classList.toggle('alice-ultimate', player.character === 'alice');
+    const isGui = player.character === 'gui';
+    const ultIcon = isGui ? '🃏' : player.character === 'alice' ? '💅' : '⚡';
+    ui.ultIcon.textContent = ultIcon; ui.desktopUltIcon.textContent = ultIcon;
+    ui.ultLabel.textContent = isGui ? 'TRUNFO' : player.character === 'alice' ? (element?.short || 'NAT') : 'ULT';
+    ui.ult.setAttribute('aria-label', isGui ? 'Mão de Trunfo: leque de cartas que perfura e atordoa' : player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : 'Ultimate de choque');
+    const ultColor = element?.color || (isGui ? '#ffd16b' : '#dfe8ef');
+    ui.ult.style.setProperty('--element-color', ultColor); ui.ult.classList.toggle('alice-ultimate', player.character === 'alice'); ui.ult.classList.toggle('gui-ultimate', isGui); ui.desktopUlt.classList.toggle('gui-ultimate', isGui);
     ui.toastCount.textContent = toastCount; ui.toastUse.classList.toggle('hidden', toastCount <= 0 || state !== 'running'); ui.toastUse.disabled = player.hp >= player.maxHp;
   }
 
@@ -374,6 +413,14 @@
     const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .38, 0, 1), radius = v.radius * Math.min(1, progress * 1.65);
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
     const effectColor = v.color || '#42dfff';
+    if (v.type === 'cardFan') {
+      ctx.translate(p.x, p.y); ctx.rotate(v.angle); ctx.globalAlpha = fade * .2;
+      ctx.fillStyle = '#ffc95f'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, Math.max(8, v.radius * progress), -v.spread / 2, v.spread / 2); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = fade * .8; ctx.strokeStyle = '#ffe5a0'; ctx.lineWidth = 2;
+      for (let i = 0; i <= 6; i++) { const a = (i / 6 - .5) * v.spread; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a) * v.radius * progress, Math.sin(a) * v.radius * progress); ctx.stroke(); }
+      ctx.globalAlpha = fade * .95; ctx.strokeStyle = '#fff2c8'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, Math.max(5, v.radius * progress), -v.spread / 2, v.spread / 2); ctx.stroke();
+      ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; return;
+    }
     for (let ring = 0; ring < 2; ring++) {
       const r = Math.max(2, radius - ring * 22), alpha = fade * (1 - ring * .25) * (.38 + Math.sin(progress * 16 + ring) * .1);
       ctx.globalAlpha = alpha; ctx.strokeStyle = ring ? '#e5fbff' : effectColor; ctx.lineWidth = ring ? 2 : 4;
@@ -393,6 +440,15 @@
   }
   function drawBullet(b) {
     const p = screenPos(b); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (b.card) {
+      const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle + Math.sin(b.phase) * .14);
+      const cardW = b.ultimate ? 12 : 9, cardH = b.ultimate ? 18 : 13;
+      ctx.globalCompositeOperation = 'source-over'; ctx.lineWidth = b.ultimate ? 1.5 : 1.1; ctx.strokeStyle = b.ultimate ? '#70451c' : '#29232a'; ctx.fillStyle = '#fff0d0';
+      ctx.beginPath(); ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 1.5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = b.color; ctx.beginPath(); ctx.moveTo(0, -3); ctx.lineTo(2.2, 0); ctx.lineTo(0, 3); ctx.lineTo(-2.2, 0); ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = .85; ctx.fillRect(-cardW / 2 + 1.2, -cardH / 2 + 1.2, 1.2, 1.2);
+      ctx.restore(); return;
+    }
     if (b.scratch) {
       const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       const slash = (y, alpha, scale = 1) => {
@@ -517,8 +573,9 @@
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-    if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
-    else if(player.character !== 'alice' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
+    if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
+    else if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
+    else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }

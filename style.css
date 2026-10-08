@@ -72,3 +72,15 @@
 @media(pointer:fine){.desktop-ultimate{display:flex}.chest-status{bottom:max(98px,calc(env(safe-area-inset-bottom) + 84px))}}
 @media(pointer:coarse){.desktop-ultimate{display:none}.chest-status{bottom:max(220px,calc(env(safe-area-inset-bottom) + 200px));width:min(210px,55vw)}}
 @media(pointer:coarse) and (max-height:430px){.chest-status{bottom:max(174px,calc(env(safe-area-inset-bottom) + 158px))}}
+
+/* Gui joins the roster; the responsive grid keeps the third pick usable on phones. */
+.character-panel{width:min(980px,calc(100vw - 28px));max-height:calc(100dvh - 24px);overflow-x:hidden;overflow-y:auto}
+.character-grid{grid-template-columns:repeat(auto-fit,minmax(205px,1fr))}
+#character-gui{--char-accent:#ff9b47}
+.character-art-gui{background-image:url('assets/gui-walk.png')}
+.ultimate.gui-ultimate{border-color:#ffd16b;background:linear-gradient(145deg,#b97624ed,#8d3c38ed);box-shadow:0 0 28px #ffb93255}
+.ultimate.gui-ultimate:disabled{filter:saturate(.48);opacity:.8}
+.desktop-ultimate.gui-ultimate{border-color:#ffd16b80;box-shadow:0 8px 24px #0009,0 0 20px #ffb93230}
+.desktop-ultimate.gui-ultimate .desktop-ultimate-icon{border-color:#ffe09a;background:linear-gradient(145deg,#a8661e,#923e3e)}
+.desktop-ultimate.gui-ultimate .desktop-ultimate-meter i{background:linear-gradient(90deg,#e18b36,#ffe08a)}
+@media(max-width:560px){.character-grid{grid-template-columns:1fr}.character-panel{padding:20px 14px}.character-description{min-height:0}}

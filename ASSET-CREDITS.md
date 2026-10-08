@@ -4,8 +4,9 @@
 
 - `assets/jao-walk.png`: personagem original inspirado na referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
 - `assets/alice-walk.png`: personagem original inspirado na foto de referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
+- `assets/gui-walk.png`: sprite sheet original do Gui, inspirado nas fotos fornecidas pelo usuário e gerado para este projeto. Não é um asset de terceiros.
 - `assets/enemy-blob.png`, `assets/enemy-bat.png`, `assets/enemy-wolf.png`, `assets/enemy-roach.png` e `assets/enemy-boss.png`: recortes das concepts aprovadas e usados no jogo como sprites dos inimigos. Não são assets de terceiros.
-- Cenário, baú, projéteis e efeitos: formas vetoriais desenhadas pelo próprio jogo em Canvas para o protótipo.
+- Cenário, baú, projéteis (incluindo as cartas do Gui) e efeitos: formas desenhadas pelo próprio jogo em Canvas para o protótipo.
 
 ## Pacotes públicos avaliados para próximas iterações
 
