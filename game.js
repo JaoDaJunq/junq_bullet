@@ -1,6 +1,16 @@
 (() => {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
+  const floorTexture = document.createElement('canvas');
+  floorTexture.width = floorTexture.height = 256;
+  const floorTextureCtx = floorTexture.getContext('2d');
+  floorTextureCtx.fillStyle = '#17211f'; floorTextureCtx.fillRect(0, 0, 256, 256);
+  for (let gx = 0; gx < 4; gx++) for (let gy = 0; gy < 4; gy++) {
+    const seed = Math.abs((gx * 73856093) ^ (gy * 19349663)) % 12, x = gx * 64, y = gy * 64;
+    floorTextureCtx.fillStyle = seed < 3 ? '#192522' : '#17211f'; floorTextureCtx.fillRect(x, y, 63, 63);
+    if (seed === 5) { floorTextureCtx.fillStyle = '#25312a'; floorTextureCtx.fillRect(x + 12, y + 18, 2, 2); floorTextureCtx.fillRect(x + 42, y + 39, 2, 2); }
+  }
+  const floorPattern = ctx.createPattern(floorTexture, 'repeat');
   const $ = (id) => document.getElementById(id);
   const ui = {
     hud: $('hud'), screen: $('screen'), menu: $('menu'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
@@ -23,7 +33,7 @@
   const dist2 = (a, b) => (a.x - b.x) ** 2 + (a.y - b.y) ** 2;
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   function resize() {
-    dpr = Math.min(devicePixelRatio || 1, 2); w = innerWidth; h = innerHeight;
+    dpr = Math.min(devicePixelRatio || 1, 1.5); w = innerWidth; h = innerHeight;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   }
@@ -145,18 +155,8 @@
 
   function drawFloor() {
     ctx.fillStyle = '#17211f'; ctx.fillRect(0, 0, w, h);
-    const tile = 64, ox = ((-player.x % tile) + tile) % tile, oy = ((-player.y % tile) + tile) % tile;
-    for (let x = ox - tile; x < w + tile; x += tile) {
-      for (let y = oy - tile; y < h + tile; y += tile) {
-        const gx = Math.floor((player.x + x) / tile), gy = Math.floor((player.y + y) / tile);
-        const seed = Math.abs((gx * 73856093) ^ (gy * 19349663)) % 12;
-        ctx.fillStyle = seed < 3 ? '#192522' : '#17211f'; ctx.fillRect(x, y, tile - 1, tile - 1);
-        if (seed === 5) { ctx.fillStyle = '#25312a'; ctx.fillRect(x + 12, y + 18, 2, 2); ctx.fillRect(x + 42, y + 39, 2, 2); }
-      }
-    }
-    const vignette = ctx.createRadialGradient(w / 2, h / 2, 30, w / 2, h / 2, Math.max(w, h) * .72);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)'); vignette.addColorStop(1, 'rgba(0,0,0,.3)');
-    ctx.fillStyle = vignette; ctx.fillRect(0, 0, w, h);
+    const size = 256, ox = ((-player.x % size) + size) % size, oy = ((-player.y % size) + size) % size;
+    ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = floorPattern; ctx.fillRect(-ox, -oy, w + size, h + size); ctx.restore();
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
   function drawChest() { if (!chest) return; const p = screenPos(chest); ctx.save(); ctx.translate(p.x,p.y+Math.sin(chest.pulse)*3); ctx.shadowColor='#ffc85d';ctx.shadowBlur=22;ctx.fillStyle='#b96d26';ctx.fillRect(-15,-10,30,22);ctx.shadowBlur=0;ctx.fillStyle='#edb84e';ctx.fillRect(-16,-14,32,9);ctx.fillStyle='#78421d';ctx.fillRect(-3,-7,6,17);ctx.fillStyle='#fff0a0';ctx.fillRect(-2,-7,4,5);ctx.restore(); }
