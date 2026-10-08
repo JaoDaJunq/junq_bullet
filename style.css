@@ -8,3 +8,49 @@
 @keyframes arenaPulse{50%{opacity:.45;box-shadow:0 0 4px #55e2ff}}
 @media(max-width:650px){.menu-panel{padding:29px 21px 25px}.brand-badge{margin-bottom:17px}.menu-panel h1{font-size:clamp(39px,12vw,58px)}.feature-row{gap:6px;margin:19px 0}.feature-row span{padding:8px;font-size:10px}.upgrade-panel{padding:28px 15px 22px}.upgrade-panel h2{font-size:22px}.upgrade-hint{font-size:10px}.cards{gap:7px;margin-top:20px}.upgrade-card{min-height:190px;padding:12px 10px;border-radius:13px}.card-kicker{font-size:7px;letter-spacing:.1em}.card-symbol{width:39px;height:39px;margin:13px 0 8px;font-size:20px}.card-key{top:10px;right:9px;width:22px;height:22px}.upgrade-card h3{font-size:12px}.upgrade-card p{font-size:10px;line-height:1.4}.card-pick{font-size:7px;padding-top:12px}.pickup-status{bottom:max(83px,calc(env(safe-area-inset-bottom) + 74px));max-width:calc(100vw - 34px);font-size:10px}}
 @media(prefers-reduced-motion:reduce){.arena-label i{animation:none}.upgrade-card,.primary{transition:none}}
+
+/* Cards de habilidade em estilo HQ, com cor definida pela raridade. */
+.upgrade-card{
+  --card-accent:#b8c3d0;
+  position:relative;
+  border:2px solid var(--card-accent);
+  border-radius:6px;
+  background:linear-gradient(150deg,color-mix(in srgb,var(--card-accent) 12%,#18202b),#10141d 58%);
+  box-shadow:5px 5px 0 #05070c,inset 0 0 0 1px #ffffff12;
+  transition:transform .16s,border-color .16s,background .16s,box-shadow .16s;
+}
+.upgrade-card:before{
+  content:"";position:absolute;right:0;top:0;width:48%;height:48%;border-radius:0;
+  background:radial-gradient(var(--card-accent) 1px,transparent 1.5px) 0 0/8px 8px;
+  filter:none;opacity:.16;mask-image:linear-gradient(135deg,#000,transparent 82%);pointer-events:none;
+}
+.upgrade-card:after{
+  content:"";position:absolute;left:0;top:59%;width:5px;height:25%;
+  background:var(--card-accent);clip-path:polygon(0 0,100% 8%,100% 92%,0 100%);pointer-events:none;
+}
+.upgrade-card:hover,.upgrade-card:focus-visible{
+  transform:translateY(-5px) rotate(-.6deg);border-color:var(--card-accent);
+  background:linear-gradient(150deg,color-mix(in srgb,var(--card-accent) 20%,#18202b),#10141d 62%);
+  box-shadow:6px 6px 0 color-mix(in srgb,var(--card-accent) 58%,#05070c),inset 0 0 0 1px #ffffff20;outline:none;
+}
+.card-rarity{
+  position:absolute;top:13px;left:15px;padding:4px 9px 4px 7px;
+  background:var(--card-accent);color:#11151d;clip-path:polygon(0 0,100% 0,91% 100%,6% 100%);
+  font-size:8px;font-weight:950;letter-spacing:.12em;line-height:1.1;z-index:1;
+}
+.card-kicker{position:relative;margin-top:27px;color:var(--card-accent);z-index:1}
+.card-symbol{
+  position:relative;width:54px;height:54px;margin:11px 0 10px;border:0;border-radius:0;
+  background:color-mix(in srgb,var(--card-accent) 24%,#10141d);color:#fff;
+  clip-path:polygon(50% 0,62% 15%,82% 6%,84% 27%,100% 39%,88% 55%,96% 77%,73% 79%,61% 100%,47% 84%,25% 95%,22% 73%,2% 62%,15% 45%,5% 24%,30% 22%);
+  font-size:28px;text-shadow:2px 2px 0 #070a10;z-index:1;
+}
+.upgrade-card h3,.upgrade-card p,.card-pick{z-index:1}
+.upgrade-card h3{padding-bottom:5px;border-bottom:2px solid var(--card-accent)}
+.card-key{border:1px solid color-mix(in srgb,var(--card-accent) 60%,#ffffff30);border-radius:3px;background:#090d14;color:var(--card-accent);z-index:2}
+.card-pick b{color:var(--card-accent)}
+.rarity-common{--card-accent:#b8c3d0;--card-glow:#b8c3d0}
+.rarity-rare{--card-accent:#52ddff;--card-glow:#52ddff}
+.rarity-epic{--card-accent:#bb87ff;--card-glow:#bb87ff}
+.rarity-legendary{--card-accent:#ffc45d;--card-glow:#ffc45d}
+@media(max-width:650px){.card-rarity{top:10px;left:10px;padding:3px 7px;font-size:7px}.card-kicker{margin-top:25px}.card-symbol{width:44px;height:44px;margin:10px 0 8px;font-size:23px}.upgrade-card h3{padding-bottom:4px}}
