@@ -11,6 +11,7 @@
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0;
   let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null;
+  const MAX_ENEMIES = 70, MAX_PARTICLES = 240;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
   const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
@@ -70,9 +71,10 @@
     if (!audioCtx) return;
     try { const o = audioCtx.createOscillator(), g = audioCtx.createGain(); o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(volume, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + duration); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + duration); } catch (_) {}
   }
-  function emit(x, y, color, count = 7, force = 1) { for (let i = 0; i < count; i++) { const a = Math.random() * Math.PI * 2, s = rand(35, 150) * force; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(.2, .55), max: .55, color, size: rand(2, 5) }); } }
+  function emit(x, y, color, count = 7, force = 1) { for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) { const a = Math.random() * Math.PI * 2, s = rand(35, 150) * force; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(.2, .55), max: .55, color, size: rand(2, 5) }); } }
   function floatText(x, y, text, color = '#fff') { floating.push({ x, y, text, color, life: .8 }); }
   function spawnEnemy() {
+    if (enemies.length >= MAX_ENEMIES) return;
     const a = rand(0, Math.PI * 2), r = Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
     const roll = Math.random();
     let kind = 'blob'; if (t > 30 && roll > .6) kind = 'bat'; if (t > 65 && roll > .82) kind = 'brute';
@@ -189,22 +191,22 @@
     ctx.rotate(Math.sin(b.phase) * .35); ctx.strokeStyle = '#aaf5ff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(-b.r * 2.5, 0); ctx.lineTo(-b.r * 1.8, -3); ctx.lineTo(-b.r * 1.2, 2); ctx.stroke();
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
-  function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);ctx.shadowColor=e.color;ctx.shadowBlur=10;ctx.fillStyle=e.hit?'#fff':e.color;
+  function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);ctx.fillStyle=e.hit?'#fff':e.color;
     if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
     else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
-    ctx.shadowBlur=0;ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1); if(e.kind==='brute'){ctx.fillStyle='#ffc773';ctx.fillRect(-r*.68,-r*1.12,5,8);ctx.fillRect(r*.4,-r*1.12,5,8);} ctx.restore();
+    ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1); if(e.kind==='brute'){ctx.fillStyle='#ffc773';ctx.fillRect(-r*.68,-r*1.12,5,8);ctx.fillRect(r*.4,-r*1.12,5,8);} ctx.restore();
     if(e.hp<e.max){ctx.fillStyle='#0d1014';ctx.fillRect(p.x-r,p.y-r-10,r*2,3);ctx.fillStyle='#ff6979';ctx.fillRect(p.x-r,p.y-r-10,r*2*clamp(e.hp/e.max,0,1),3);}
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
-    ctx.save(); ctx.globalAlpha = .17 + player.shotFlash * 2.4; ctx.strokeStyle = '#65e7ff'; ctx.shadowColor = '#49dfff'; ctx.shadowBlur = 17; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
-    if(atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4;ctx.save();ctx.shadowColor='#45dfff';ctx.shadowBlur=player.shotFlash>0?12:5;ctx.drawImage(atlas,col*cell,player.facing*rowH,cell,rowH,sx-34,sy-35,68,68);ctx.restore();}
+    if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+    if(atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4;ctx.drawImage(atlas,col*cell,player.facing*rowH,cell,rowH,sx-34,sy-35,68,68);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     for(const c of companions){const x=sx+Math.cos(c.angle)*38,y=sy+Math.sin(c.angle)*22;ctx.shadowColor='#bb83ff';ctx.shadowBlur=16;ctx.fillStyle='#d9b8ff';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
   }
   function render() {
     ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor();
-    for(const o of xpOrbs){const p=screenPos(o);ctx.shadowColor='#51d7ff';ctx.shadowBlur=15;ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();ctx.shadowBlur=0;}
+    for(const o of xpOrbs){const p=screenPos(o);ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();}
     drawChest(); for(const item of items) drawItem(item); for(const b of bullets) drawBullet(b);
     for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
     drawPlayer(); for(const f of floating){const p=screenPos(f);ctx.globalAlpha=clamp(f.life/.8,0,1);ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillStyle=f.color;ctx.fillText(f.text,p.x,p.y);}ctx.globalAlpha=1;
