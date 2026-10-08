@@ -330,8 +330,7 @@
     const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 48;
     const scale = sprite?.naturalWidth ? size / Math.max(sprite.naturalWidth, sprite.naturalHeight) : 1;
     const drawWidth = sprite?.naturalWidth ? sprite.naturalWidth * scale : size, drawHeight = sprite?.naturalHeight ? sprite.naturalHeight * scale : size;
-    const facing = cardinalFacing(player.x - e.x, player.y - e.y);
-    ctx.save(); ctx.translate(p.x, p.y + bob); ctx.rotate(facing);
+    ctx.save(); ctx.translate(p.x, p.y + bob);
     if (sprite?.complete && sprite.naturalWidth) {
       ctx.globalAlpha = e.hit ? .72 : 1;
       ctx.drawImage(sprite, -drawWidth / 2, -drawHeight * .58, drawWidth, drawHeight);

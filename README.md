@@ -15,4 +15,4 @@ Baixe o ZIP do repositório, extraia e abra `index.html` no navegador. Também p
 
 ## Estado deste protótipo
 
-O personagem Jão usa o sprite sheet original gerado para o projeto em `assets/jao-walk.png`. Inimigos, cenário, projéteis e efeitos são formas desenhadas pelo Canvas para manter a primeira build autocontida e jogável. `ASSET-CREDITS.md` lista pacotes públicos avaliados para substituir ou complementar esses placeholders.
+Jão e Alice usam sprite sheets locais. Os inimigos usam as concepts aprovadas em `assets/enemy-*.png` (gosma, pombo-morcego, cães das sombras, baratas e Rei do Poste); cenário, projéteis e efeitos são desenhados em Canvas. `ASSET-CREDITS.md` lista as artes do projeto e pacotes públicos avaliados.
