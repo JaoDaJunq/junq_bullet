@@ -24,7 +24,7 @@
   let toastCount = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
-  const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const toastSprite = new Image();
@@ -65,7 +65,7 @@
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null;
     toastCount = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
   $('start-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
@@ -106,16 +106,17 @@
     enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8) });
   }
   function nearestEnemy() { let best = null, bd = Infinity; for (const e of enemies) { const d = dist2(player, e); if (d < bd) { best = e; bd = d; } } return best; }
-  function fire(target, damage = player.damage, speed = 440, color = '#54dcff') {
+  function fire(target, damage = player.damage, speed = player.shotSpeed, color = '#54dcff', count = 1) {
     if (!target) return;
     const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1;
-    bullets.push({ x: player.x, y: player.y, vx: dx / len * speed, vy: dy / len * speed, damage, life: 1.5, color, r: 6, age: 0, trail: [], phase: rand(0, 6.28) });
+    const aim = Math.atan2(dy, dx);
+    for (let i = 0; i < count; i++) { const angle = aim + (i - (count - 1) / 2) * .12; bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, life: 1.5, color, r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: color === '#54dcff' ? player.pierce : 0, hitEnemies: new Set() }); }
     if (color === '#54dcff') { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(player.x + dx / len * 14, player.y + dy / len * 14, '#c9f8ff', 4, .45); sound(680, .045, 'triangle', .018);
   }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
-    const radius = 600, radius2 = radius * radius;
+    const radius = player.ultRadius, radius2 = radius * radius;
     const chainTargets = enemies.filter(e => dist2(player, e) < radius2).sort((a, b) => b.hp - a.hp).slice(0, 4);
     const chainSet = new Set(chainTargets);
     player.ult = player.ultMax;
@@ -123,28 +124,47 @@
     emit(player.x, player.y, '#b9f7ff', 32, 2.2); sound(170, .32, 'sawtooth', .045);
     for (const e of enemies) {
       if (dist2(player, e) >= radius2) continue;
-      e.hp -= player.damage * 1.1;
+      e.hp -= player.damage * 1.1 * player.ultDamage;
       e.hit = .3;
       emit(e.x, e.y, '#c5faff', chainSet.has(e) ? 7 : 2, .8);
-      if (chainSet.has(e)) { e.hp -= player.damage * 1.5; e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
+      if (chainSet.has(e)) { e.hp -= player.damage * 1.5 * player.ultDamage; e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
       if (e.hp <= 0) defeat(e);
     }
     for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) enemies.splice(i, 1);
     showToast('ULTIMATE: RAJADA DE CHOQUE!');
   }
   function defeat(e) { kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
-  function addXp(value) { player.xp += value; if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
+  function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
     { id: 'rapid', rarity: 'rare', icon: '⚡', category: 'COMBATE', title: 'Gatilho rápido', desc: 'Atira 18% mais rápido.', apply: () => player.fireRate = Math.max(.16, player.fireRate * .82) },
     { id: 'damage', rarity: 'epic', icon: '✦', category: 'COMBATE', title: 'Carga forte', desc: 'Seus tiros causam 30% mais dano.', apply: () => player.damage *= 1.3 },
     { id: 'speed', rarity: 'common', icon: '➤', category: 'MOVIMENTO', title: 'Passo ligeiro', desc: 'Move 12% mais rápido.', apply: () => player.speed *= 1.12 },
+    { id: 'toughness', rarity: 'common', icon: '▰', category: 'SOBREVIVÊNCIA', title: 'Casca grossa', desc: '+15 de vida máxima e recupera 15.', apply: () => { player.maxHp += 15; player.hp = Math.min(player.maxHp, player.hp + 15); } },
     { id: 'heart', rarity: 'rare', icon: '♥', category: 'SOBREVIVÊNCIA', title: 'Fôlego extra', desc: '+25 de vida máxima e recupera 25.', apply: () => { player.maxHp += 25; player.hp = Math.min(player.maxHp, player.hp + 25); } },
     { id: 'magnet', rarity: 'common', icon: '◉', category: 'SUPORTE', title: 'Ímã de XP', desc: 'Atrai experiência de mais longe.', apply: () => player.pickup += 45 },
-    { id: 'companion', rarity: 'legendary', icon: '◈', category: 'SUPORTE', title: 'Mini parceiro', desc: 'Um orbe aliado dispara junto contigo.', apply: () => { player.companion++; if (companions.length < player.companion) companions.push({ angle: Math.random() * 6.28 }); } }
+    { id: 'companion', rarity: 'legendary', icon: '◈', category: 'SUPORTE', title: 'Mini parceiro', desc: 'Um orbe aliado dispara junto contigo.', apply: () => { player.companion++; if (companions.length < player.companion) companions.push({ angle: Math.random() * 6.28 }); } },
+    { id: 'xp', rarity: 'common', icon: '✧', category: 'PROGRESSÃO', title: 'Instinto de sobrevivência', desc: 'Ganha 20% mais XP ao coletar orbes.', apply: () => player.xpGain *= 1.2 },
+    { id: 'shot-speed', rarity: 'rare', icon: '➤', category: 'COMBATE', title: 'Disparo veloz', desc: 'Seus projéteis viajam 22% mais rápido.', apply: () => player.shotSpeed *= 1.22 },
+    { id: 'multishot', rarity: 'rare', icon: '»', category: 'COMBATE', title: 'Tiro duplo', desc: 'Dispara +1 projétil em leque a cada ataque.', apply: () => player.multishot = Math.min(5, player.multishot + 1) },
+    { id: 'pierce', rarity: 'epic', icon: '↠', category: 'COMBATE', title: 'Perfuração', desc: 'Cada projétil atravessa +1 inimigo.', apply: () => player.pierce = Math.min(4, player.pierce + 1) },
+    { id: 'critical', rarity: 'epic', icon: '✹', category: 'COMBATE', title: 'Ponto fraco', desc: '+10% de chance de causar o dobro de dano.', apply: () => player.critChance = Math.min(.65, player.critChance + .1) },
+    { id: 'ultimate', rarity: 'epic', icon: 'ϟ', category: 'ULTIMATE', title: 'Bateria carregada', desc: 'Reduz em 18% o tempo de recarga da ultimate.', apply: () => player.ultMax = Math.max(8, player.ultMax * .82) },
+    { id: 'companion-bond', rarity: 'legendary', icon: '✺', category: 'SUPORTE', title: 'Laço elétrico', desc: 'Mini parceiros causam 40% mais dano e atiram 20% mais rápido.', apply: () => { player.companionDamage *= 1.4; player.companionRate = Math.max(.3, player.companionRate * .8); } },
+    { id: 'ult-field', rarity: 'legendary', icon: 'ϟ', category: 'ULTIMATE', title: 'Campo absoluto', desc: 'A ultimate alcança 18% mais longe e causa 20% mais dano.', apply: () => { player.ultRadius *= 1.18; player.ultDamage *= 1.2; } }
   ];
   const rarityNames = { common: 'COMUM', rare: 'RARO', epic: 'ÉPICO', legendary: 'LENDÁRIO' };
+  const rarityChances = { common: 45, rare: 30, epic: 18, legendary: 7 };
   let currentChoices = [];
-  function makeUpgradeOptions() { currentChoices = [...upgrades].sort(() => Math.random() - .5).slice(0, 3); ui.options.innerHTML = ''; currentChoices.forEach((u, i) => { const b = document.createElement('button'); b.className = `upgrade-card rarity-${u.rarity}`; b.setAttribute('aria-label', `${rarityNames[u.rarity]} · ${i + 1}: ${u.title}. ${u.desc}`); b.innerHTML = `<span class="card-rarity">${rarityNames[u.rarity]}</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`; b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b); }); }
+  function rollRarity(available) { const pool = Object.entries(rarityChances).filter(([rarity]) => available.has(rarity)); const total = pool.reduce((sum, [, weight]) => sum + weight, 0); let roll = Math.random() * total; for (const [rarity, weight] of pool) { roll -= weight; if (roll < 0) return rarity; } return pool[pool.length - 1][0]; }
+  function makeUpgradeOptions() {
+    const remaining = [...upgrades]; currentChoices = [];
+    while (currentChoices.length < 3 && remaining.length) {
+      const rarity = rollRarity(new Set(remaining.map(u => u.rarity))), pool = remaining.filter(u => u.rarity === rarity);
+      const chosen = pool[Math.floor(Math.random() * pool.length)]; currentChoices.push(chosen); remaining.splice(remaining.indexOf(chosen), 1);
+    }
+    ui.options.innerHTML = '';
+    currentChoices.forEach((u, i) => { const chance = rarityChances[u.rarity]; const b = document.createElement('button'); b.className = `upgrade-card rarity-${u.rarity}`; b.setAttribute('aria-label', `${rarityNames[u.rarity]} (${chance}% por card) · ${i + 1}: ${u.title}. ${u.desc}`); b.innerHTML = `<span class="card-rarity">${rarityNames[u.rarity]} · ${chance}%</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`; b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b); });
+  }
   function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; currentChoices[i].apply(); setMode('running'); showToast(`${currentChoices[i].title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   function openChest() { items.push({ x: chest.x, y: chest.y, kind: 'toast', pulse: 0, age: 0 }); chestProgress = 0; emit(chest.x, chest.y, '#ffd66e', 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, '🍞!', '#ffe69a'); showToast('Baú aberto: a Torrada da Gorda caiu! Chega perto para pegar.'); chest = null; ui.chest.classList.add('hidden'); }
@@ -167,8 +187,8 @@
     if (moving) { player.facing = Math.abs(ix) > Math.abs(iy) ? (ix < 0 ? 2 : 3) : (iy < 0 ? 1 : 0); player.walk += dt * 9; }
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
-    fireTimer -= dt; if (fireTimer <= 0) { fire(nearestEnemy()); fireTimer = player.fireRate; }
-    if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) fire(nearestEnemy(), player.damage * .55, 380, '#b98cff'); companionTimer = .82; } for (const c of companions) c.angle += dt * 1.1; }
+    fireTimer -= dt; if (fireTimer <= 0) { fire(nearestEnemy(), player.damage, player.shotSpeed, '#54dcff', player.multishot); fireTimer = player.fireRate; }
+    if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) fire(nearestEnemy(), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff'); companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
       e.stun = Math.max(0, (e.stun || 0) - dt);
@@ -176,7 +196,7 @@
       e.x += dx / len * e.speed * dt; e.y += dy / len * e.speed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
       if (len < e.radius + 17 && player.invuln <= 0) { player.hp -= e.damage; player.invuln = .62; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); }
     }
-    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (dist2(b, e) < (e.radius + b.r) ** 2) { e.hp -= b.damage; e.hit = .12; emit(b.x, b.y, '#d7fbff', 8, .62); floatText(e.x, e.y - e.radius, `${Math.round(b.damage)}`, '#bdf4ff'); gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } } if (gone) bullets.splice(i, 1); }
+    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, damage = b.damage * (critical ? 2 : 1); e.hp -= damage; e.hit = .12; emit(b.x, b.y, '#d7fbff', 8, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value); emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     chestTimer -= dt; if (!chest && chestTimer <= 0) { spawnChest(); chestTimer = 45; }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
