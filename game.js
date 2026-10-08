@@ -1,15 +1,43 @@
 (() => {
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
+  // Build the plaza once: one repeated 1024px canvas, with details baked in.
+  // Nothing in the ground creates world objects or new chunks while the player moves.
   const floorTexture = document.createElement('canvas');
-  floorTexture.width = floorTexture.height = 256;
+  const floorSize = floorTexture.width = floorTexture.height = 1024;
   const floorTextureCtx = floorTexture.getContext('2d');
-  floorTextureCtx.fillStyle = '#17211f'; floorTextureCtx.fillRect(0, 0, 256, 256);
-  for (let gx = 0; gx < 4; gx++) for (let gy = 0; gy < 4; gy++) {
-    const seed = Math.abs((gx * 73856093) ^ (gy * 19349663)) % 12, x = gx * 64, y = gy * 64;
-    floorTextureCtx.fillStyle = seed < 3 ? '#192522' : '#17211f'; floorTextureCtx.fillRect(x, y, 63, 63);
-    if (seed === 5) { floorTextureCtx.fillStyle = '#25312a'; floorTextureCtx.fillRect(x + 12, y + 18, 2, 2); floorTextureCtx.fillRect(x + 42, y + 39, 2, 2); }
+  const floorColors = ['#192522', '#1b2825', '#1c2926', '#1a2624', '#1d2926'];
+  let floorSeed = 824731;
+  const floorRand = () => { floorSeed = (floorSeed * 16807) % 2147483647; return (floorSeed - 1) / 2147483646; };
+  floorTextureCtx.fillStyle = '#17211f'; floorTextureCtx.fillRect(0, 0, floorSize, floorSize);
+  for (let gy = 0; gy < 16; gy++) for (let gx = 0; gx < 16; gx++) {
+    const x = gx * 64, y = gy * 64;
+    floorTextureCtx.fillStyle = floorColors[Math.floor(floorRand() * floorColors.length)];
+    floorTextureCtx.fillRect(x + 1, y + 1, 62, 62);
+    floorTextureCtx.fillStyle = 'rgba(7,14,14,.22)';
+    floorTextureCtx.fillRect(x, y, 64, 1.5); floorTextureCtx.fillRect(x, y, 1.5, 64);
+    floorTextureCtx.fillStyle = 'rgba(111,139,124,.055)';
+    floorTextureCtx.fillRect(x + 2, y + 2, 60, 1);
+    const flecks = Math.floor(floorRand() * 3);
+    for (let i = 0; i < flecks; i++) {
+      floorTextureCtx.fillStyle = floorRand() > .5 ? 'rgba(116,146,132,.12)' : 'rgba(5,12,12,.16)';
+      floorTextureCtx.fillRect(x + 8 + floorRand() * 48, y + 8 + floorRand() * 48, 1 + floorRand() * 2, 1);
+    }
   }
+  // A few fine, static pavement cracks add a hand-drawn urban feel without per-frame work.
+  floorTextureCtx.lineWidth = 1.2; floorTextureCtx.lineCap = 'round';
+  for (let i = 0; i < 13; i++) {
+    const x = 36 + floorRand() * 952, y = 36 + floorRand() * 952, bend = floorRand() * 10 - 5;
+    floorTextureCtx.strokeStyle = 'rgba(5,12,12,.28)'; floorTextureCtx.beginPath();
+    floorTextureCtx.moveTo(x, y); floorTextureCtx.lineTo(x + 8 + floorRand() * 10, y + bend);
+    floorTextureCtx.lineTo(x + 13 + floorRand() * 18, y + bend + floorRand() * 7 - 3); floorTextureCtx.stroke();
+  }
+  // Small drain detail, baked into the same repeating texture.
+  floorTextureCtx.fillStyle = '#121b19'; floorTextureCtx.fillRect(744, 704, 44, 30);
+  floorTextureCtx.strokeStyle = 'rgba(123,151,135,.32)'; floorTextureCtx.lineWidth = 1;
+  floorTextureCtx.strokeRect(744.5, 704.5, 43, 29);
+  floorTextureCtx.strokeStyle = 'rgba(123,151,135,.25)';
+  for (let y = 709; y < 732; y += 5) { floorTextureCtx.beginPath(); floorTextureCtx.moveTo(748, y); floorTextureCtx.lineTo(784, y); floorTextureCtx.stroke(); }
   const floorPattern = ctx.createPattern(floorTexture, 'repeat');
   const $ = (id) => document.getElementById(id);
   const ui = {
@@ -306,7 +334,7 @@
 
   function drawFloor() {
     ctx.fillStyle = '#17211f'; ctx.fillRect(0, 0, w, h);
-    const size = 256, ox = ((-player.x % size) + size) % size, oy = ((-player.y % size) + size) % size;
+    const size = floorSize, ox = ((-player.x % size) + size) % size, oy = ((-player.y % size) + size) % size;
     ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = floorPattern; ctx.fillRect(-ox, -oy, w + size, h + size); ctx.restore();
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
