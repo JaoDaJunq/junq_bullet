@@ -22,6 +22,7 @@
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
   let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 55, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao', bossSpawned = false;
   let toastCount = 0;
+  let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
   const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
@@ -79,7 +80,7 @@
   setMode('menu');
   function reset() {
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
-    toastCount = 0;
+    toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
@@ -147,11 +148,12 @@
     if (color === '#54dcff' || scratch) { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(origin.x + dx / len * 14, origin.y + dy / len * 14, color === '#54dcff' ? '#c9f8ff' : color, 4, .45); sound(680, .045, 'triangle', .018);
   }
+  function startUltimateCooldown() { player.ult = player.ultMax * Math.max(.1, 1 - batteryReserved); batteryReserved = 0; }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
     if (player.character === 'alice') {
       player.nailElement = (player.nailElement + 1) % aliceElements.length;
-      const element = aliceElements[player.nailElement]; player.ult = player.ultMax;
+      const element = aliceElements[player.nailElement]; startUltimateCooldown();
       ultimateVfx = { x: player.x, y: player.y, radius: 135, life: .48, max: .48, targets: [], color: element.color, type: 'palette' };
       emit(player.x, player.y, element.color, 24, 1.25); floatText(player.x, player.y - 44, element.short, element.color);
       sound(540, .22, 'triangle', .045); showToast(`Esmalte ${element.name}: ${element.id === 'poison' ? 'veneno' : element.id === 'slow' ? 'lentidão' : element.id === 'lifesteal' ? 'roubo de vida' : 'inimigos recebem mais dano'}.`);
@@ -160,7 +162,7 @@
     const radius = player.ultRadius, radius2 = radius * radius;
     const chainTargets = enemies.filter(e => dist2(player, e) < radius2).sort((a, b) => b.hp - a.hp).slice(0, 4);
     const chainSet = new Set(chainTargets);
-    player.ult = player.ultMax;
+    startUltimateCooldown();
     ultimateVfx = { x: player.x, y: player.y, radius, life: .9, max: .9, targets: chainTargets.map(e => ({ x: e.x, y: e.y, phase: rand(0, 6.28) })) };
     emit(player.x, player.y, '#b9f7ff', 32, 2.2); sound(170, .32, 'sawtooth', .045);
     for (const e of enemies) {
@@ -215,7 +217,36 @@
   }
   function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; currentChoices[i].apply(); setMode('running'); showToast(`${currentChoices[i].title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
-  function openChest() { items.push({ x: chest.x, y: chest.y, kind: 'toast', pulse: 0, age: 0 }); chestProgress = 0; emit(chest.x, chest.y, '#ffd66e', 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, '🍞!', '#ffe69a'); showToast('Baú aberto: a Torrada da Gorda caiu! Chega perto para pegar.'); chest = null; ui.chest.classList.add('hidden'); }
+  const chestDrops = [
+    { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
+    { kind: 'battery', name: 'Bateria de bolso', weight: 20, color: '#79eaff', icon: 'ϟ' },
+    { kind: 'coffee', name: 'Café gelado', weight: 18, color: '#c99565', icon: '☕' },
+    { kind: 'shield', name: 'Crachá blindado', weight: 12, color: '#8ed6ff', icon: '⬡' },
+    { kind: 'xp-snack', name: 'Snack de XP', weight: 10, color: '#ad9aff', icon: '✦' }
+  ];
+  function openChest() {
+    const total = chestDrops.reduce((sum, drop) => sum + drop.weight, 0); let roll = Math.random() * total, reward = chestDrops[0];
+    for (const drop of chestDrops) { roll -= drop.weight; if (roll < 0) { reward = drop; break; } }
+    items.push({ x: chest.x, y: chest.y, kind: reward.kind, pulse: 0, age: 0 }); chestProgress = 0;
+    emit(chest.x, chest.y, reward.color, 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, reward.icon, reward.color);
+    showToast(`Baú aberto: ${reward.name} caiu! Chega perto para pegar.`); chest = null; ui.chest.classList.add('hidden');
+  }
+  function applyChestItem(item) {
+    const reward = chestDrops.find(drop => drop.kind === item.kind); if (!reward) return;
+    if (item.kind === 'battery') {
+      const wasCooling = player.ult > 0;
+      if (wasCooling) player.ult = Math.max(0, player.ult - player.ultMax * .5);
+      else batteryReserved = Math.min(.8, batteryReserved + .5);
+      showToast(wasCooling ? 'Bateria: metade da recarga da ultimate concluída.' : `Bateria guardada: próxima recarga da ultimate será ${Math.round(batteryReserved * 100)}% menor.`);
+    } else if (item.kind === 'coffee') {
+      coffeeTimer = Math.max(coffeeTimer, 8); showToast('Café gelado: +20% velocidade de ataque por 8s.');
+    } else if (item.kind === 'shield') {
+      shieldHits = Math.min(2, shieldHits + 1); showToast(`Crachá blindado: bloqueia ${shieldHits} golpe${shieldHits > 1 ? 's' : ''}.`);
+    } else if (item.kind === 'xp-snack') {
+      doubleXpOrbs = Math.min(9, doubleXpOrbs + 3); showToast(`Snack de XP: próximos ${doubleXpOrbs} orbes valem o dobro.`);
+    }
+    emit(item.x, item.y, reward.color, 20, 1); floatText(item.x, item.y - 25, reward.name, reward.color);
+  }
 
   function useToast() {
     if (toastCount <= 0) { showToast('Não tem Torrada da Gorda no inventário.'); return; }
@@ -227,7 +258,7 @@
   }
 
   function update(dt) {
-    elapsed += dt; player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt); player.shotFlash = Math.max(0, player.shotFlash - dt); if (ultimateVfx && (ultimateVfx.life -= dt) <= 0) ultimateVfx = null;
+    elapsed += dt; coffeeTimer = Math.max(0, coffeeTimer - dt); player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt); player.shotFlash = Math.max(0, player.shotFlash - dt); if (ultimateVfx && (ultimateVfx.life -= dt) <= 0) ultimateVfx = null;
     let ix = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + joyX;
     let iy = (keys.has('s') || keys.has('arrowdown') ? 1 : 0) - (keys.has('w') || keys.has('arrowup') ? 1 : 0) + joyY;
     const il = Math.hypot(ix, iy); if (il > 1) { ix /= il; iy /= il; }
@@ -236,7 +267,7 @@
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
     if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
-    fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate; }
+    fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) { const origin = petWorldPosition(c); fire(nearestEnemy(origin), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff', 1, null, false, origin); } companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
@@ -246,15 +277,15 @@
       e.stun = Math.max(0, (e.stun || 0) - dt);
       if (e.stun > 0) { e.hit = Math.max(e.hit, .08); continue; }
       const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
-      if (len < e.radius + 17 && player.invuln <= 0) { player.hp -= e.damage; player.invuln = .62; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); }
+      if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); } }
     }
     for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
-    for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value); emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
+    for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value * (doubleXpOrbs > 0 ? 2 : 1)); if (doubleXpOrbs > 0) doubleXpOrbs--; emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     if (!chest) { chestTimer -= dt; if (chestTimer <= 0) { spawnChest(); chestTimer = 80; } }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
     let nearbyItem = null, nearbyItemDistance = Infinity;
-    for (let i = items.length - 1; i >= 0; i--) { const item = items[i], d = Math.sqrt(dist2(player, item)); item.pulse += dt * 4; item.age += dt; if (d < nearbyItemDistance) { nearbyItem = item; nearbyItemDistance = d; } if (d < 34) { toastCount++; emit(item.x, item.y, '#ffe59a', 28, 1.35); sound(920, .22, 'triangle', .045); floatText(item.x, item.y - 25, 'Torrada +1', '#ffe69a'); showToast(`Torrada da Gorda guardada no inventário (${toastCount}).`); items.splice(i, 1); nearbyItem = null; nearbyItemDistance = Infinity; } }
-    if (nearbyItem && nearbyItemDistance < 92) { ui.pickup.classList.remove('hidden'); ui.pickupLabel.textContent = nearbyItemDistance < 34 ? 'Pega: Torrada da Gorda' : 'Torrada da Gorda no chão'; } else ui.pickup.classList.add('hidden');
+    for (let i = items.length - 1; i >= 0; i--) { const item = items[i], d = Math.sqrt(dist2(player, item)); item.pulse += dt * 4; item.age += dt; if (d < nearbyItemDistance) { nearbyItem = item; nearbyItemDistance = d; } if (d < 34) { if (item.kind === 'toast') { toastCount++; emit(item.x, item.y, '#ffe59a', 28, 1.35); sound(920, .22, 'triangle', .045); floatText(item.x, item.y - 25, 'Torrada +1', '#ffe69a'); showToast(`Torrada da Gorda guardada no inventário (${toastCount}).`); } else { applyChestItem(item); sound(680, .18, 'triangle', .035); } items.splice(i, 1); nearbyItem = null; nearbyItemDistance = Infinity; } }
+    if (nearbyItem && nearbyItemDistance < 92) { const reward = chestDrops.find(drop => drop.kind === nearbyItem.kind); ui.pickup.classList.remove('hidden'); ui.pickupLabel.textContent = nearbyItemDistance < 34 ? `Pega: ${reward?.name || 'Item'}` : `${reward?.name || 'Item'} no chão`; } else ui.pickup.classList.add('hidden');
     for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .94; p.vy *= .94; p.life -= dt; if (p.life <= 0) particles.splice(i, 1); }
     for (let i = floating.length - 1; i >= 0; i--) { const f = floating[i]; f.y -= 23 * dt; f.life -= dt; if (f.life <= 0) floating.splice(i, 1); }
     if (toastTimer > 0 && (toastTimer -= dt) <= 0) ui.toast.classList.add('hidden');
@@ -280,7 +311,36 @@
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
   function drawChest() { if (!chest) return; const p = screenPos(chest); ctx.save(); ctx.translate(p.x,p.y+Math.sin(chest.pulse)*3); ctx.fillStyle='rgba(255,200,93,.16)';ctx.fillRect(-20,-18,40,40);ctx.fillStyle='#b96d26';ctx.fillRect(-15,-10,30,22);ctx.fillStyle='#edb84e';ctx.fillRect(-16,-14,32,9);ctx.fillStyle='#78421d';ctx.fillRect(-3,-7,6,17);ctx.fillStyle='#fff0a0';ctx.fillRect(-2,-7,4,5);ctx.restore(); }
-  function drawItem(item) { const p = screenPos(item), bob = Math.sin(item.pulse) * 3; ctx.save(); ctx.translate(p.x, p.y - 6 - bob); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd76b'; ctx.globalAlpha = .16 + Math.sin(item.pulse * 1.6) * .05; ctx.beginPath(); ctx.arc(0, 0, 22 + Math.sin(item.pulse) * 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; if (toastSprite.complete && toastSprite.naturalWidth) ctx.drawImage(toastSprite, -18, -18, 36, 36); else { ctx.font = 'bold 24px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🍞', 0, 0); } ctx.restore(); }
+  function drawItem(item) {
+    const p = screenPos(item), bob = Math.sin(item.pulse) * 3, reward = chestDrops.find(drop => drop.kind === item.kind) || chestDrops[0];
+    ctx.save(); ctx.translate(p.x, p.y - 6 - bob);
+    ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = reward.color; ctx.globalAlpha = .16 + Math.sin(item.pulse * 1.6) * .05;
+    ctx.beginPath(); ctx.arc(0, 0, 22 + Math.sin(item.pulse) * 2, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    if (item.kind === 'toast') {
+      if (toastSprite.complete && toastSprite.naturalWidth) ctx.drawImage(toastSprite, -18, -18, 36, 36);
+      else { ctx.font = 'bold 24px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🍞', 0, 0); }
+    } else {
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = '#17202b'; ctx.lineWidth = 5; ctx.fillStyle = reward.color;
+      if (item.kind === 'battery') {
+        ctx.beginPath(); ctx.roundRect(-10, -14, 20, 28, 4); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#17202b'; ctx.fillRect(-4, -18, 8, 4);
+        ctx.fillStyle = '#f4ffff'; ctx.beginPath(); ctx.moveTo(2, -10); ctx.lineTo(-5, 1); ctx.lineTo(0, 1); ctx.lineTo(-2, 10); ctx.lineTo(6, -3); ctx.lineTo(1, -3); ctx.closePath(); ctx.fill();
+      } else if (item.kind === 'coffee') {
+        ctx.beginPath(); ctx.roundRect(-12, -10, 20, 22, 4); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(9, -1, 6, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+        ctx.strokeStyle = '#fff4dd'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-7, -14); ctx.quadraticCurveTo(-11, -19, -7, -22); ctx.moveTo(1, -14); ctx.quadraticCurveTo(-3, -19, 1, -22); ctx.stroke();
+      } else if (item.kind === 'shield') {
+        ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(13, -10); ctx.lineTo(11, 4); ctx.quadraticCurveTo(8, 12, 0, 17); ctx.quadraticCurveTo(-8, 12, -11, 4); ctx.lineTo(-13, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.strokeStyle = '#f1fbff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -9); ctx.lineTo(0, 9); ctx.moveTo(-6, -2); ctx.lineTo(6, -2); ctx.stroke();
+      } else {
+        ctx.fillStyle = reward.color; ctx.strokeStyle = '#17202b'; ctx.lineWidth = 4; ctx.beginPath();
+        for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? 6 : 15; const x = Math.cos(a) * r, y = Math.sin(a) * r; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff4c2'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
   function drawUltimate() {
     if (!ultimateVfx) return;
     const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .38, 0, 1), radius = v.radius * Math.min(1, progress * 1.65);
