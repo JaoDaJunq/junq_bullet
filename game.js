@@ -231,7 +231,7 @@
     if (moving) { player.facing = Math.abs(ix) > Math.abs(iy) ? (ix < 0 ? 2 : 3) : (iy < 0 ? 1 : 0); player.walk += dt * 9; }
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
-    if (!bossSpawned && elapsed >= 45) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
+    if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
     fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate; }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) fire(nearestEnemy(), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff'); companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -324,11 +324,13 @@
   }
   function drawEnemy(e) {
     const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius, sprite = enemySprites[e.kind];
-    const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : e.kind === 'bat' ? 48 : 48;
+    const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 48;
+    const scale = sprite?.naturalWidth ? size / Math.max(sprite.naturalWidth, sprite.naturalHeight) : 1;
+    const drawWidth = sprite?.naturalWidth ? sprite.naturalWidth * scale : size, drawHeight = sprite?.naturalHeight ? sprite.naturalHeight * scale : size;
     ctx.save(); ctx.translate(p.x, p.y + bob);
     if (sprite?.complete && sprite.naturalWidth) {
       ctx.globalAlpha = e.hit ? .72 : 1;
-      ctx.drawImage(sprite, -size / 2, -size * .58, size, size);
+      ctx.drawImage(sprite, -drawWidth / 2, -drawHeight * .58, drawWidth, drawHeight);
       ctx.globalAlpha = 1;
       if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
     } else {
@@ -338,7 +340,7 @@
       ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1);
     }
     ctx.restore();
-    if(e.hp<e.max){const barWidth=e.kind==='boss'?r*2.6:r*2, barY=p.y-size*.58-7;ctx.fillStyle='#0d1014';ctx.fillRect(p.x-barWidth/2,barY,barWidth,3);ctx.fillStyle=e.kind==='boss'?'#4bdfff':'#ff6979';ctx.fillRect(p.x-barWidth/2,barY,barWidth*clamp(e.hp/e.max,0,1),3);}
+    if(e.hp<e.max){const barWidth=e.kind==='boss'?r*2.6:r*2, barY=p.y-drawHeight*.58-7;ctx.fillStyle='#0d1014';ctx.fillRect(p.x-barWidth/2,barY,barWidth,3);ctx.fillStyle=e.kind==='boss'?'#4bdfff':'#ff6979';ctx.fillRect(p.x-barWidth/2,barY,barWidth*clamp(e.hp/e.max,0,1),3);}
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
