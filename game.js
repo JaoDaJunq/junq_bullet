@@ -117,7 +117,7 @@
   function floatText(x, y, text, color = '#fff') { floating.push({ x, y, text, color, life: .8 }); }
   function spawnEnemy(forcedKind = null) {
     if (enemies.length >= MAX_ENEMIES) return;
-    const a = rand(0, Math.PI * 2), r = Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
+    const a = rand(0, Math.PI * 2), r = forcedKind === 'boss' ? Math.min(w, h) * .38 : Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
     const roll = Math.random();
     let kind = forcedKind || 'blob';
     if (!forcedKind) { if (t > 14 && roll > .6) kind = 'bat'; if (t > 25 && roll > .79) kind = 'wolf'; if (t > 34 && roll > .91) kind = 'roach'; }
