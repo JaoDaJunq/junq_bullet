@@ -13,20 +13,22 @@
   const floorPattern = ctx.createPattern(floorTexture, 'repeat');
   const $ = (id) => document.getElementById(id);
   const ui = {
-    hud: $('hud'), screen: $('screen'), menu: $('menu'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
+    hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
     options: $('upgrade-options'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
     pickup: $('pickup-status'), pickupLabel: $('pickup-label'),
-    joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
+    joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
-  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null;
+  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao';
   let toastCount = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
-  const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
+  const aliceAtlas = new Image();
+  aliceAtlas.src = 'assets/alice-walk.png';
   const toastSprite = new Image();
   toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
@@ -55,20 +57,34 @@
     state = next;
     needsRender = true;
     ui.screen.classList.toggle('hidden', next === 'running');
-    ui.menu.classList.toggle('hidden', next !== 'menu'); ui.upgrade.classList.toggle('hidden', next !== 'upgrade');
+    ui.menu.classList.toggle('hidden', next !== 'menu'); ui.characterSelect.classList.toggle('hidden', next !== 'select'); ui.upgrade.classList.toggle('hidden', next !== 'upgrade');
     ui.pause.classList.toggle('hidden', next !== 'paused'); ui.over.classList.toggle('hidden', next !== 'gameover');
-    ui.hud.classList.toggle('hidden', next === 'menu');
-    ui.joystick.classList.toggle('hidden', !mobile || next !== 'running'); ui.ult.classList.toggle('hidden', !mobile || next === 'menu' || next === 'gameover');
+    ui.hud.classList.toggle('hidden', next === 'menu' || next === 'select');
+    ui.joystick.classList.toggle('hidden', !mobile || next !== 'running'); ui.ult.classList.toggle('hidden', !mobile || next !== 'running');
+    ui.toastUse.classList.toggle('hidden', next !== 'running' || toastCount <= 0);
+  }
+  function selectCharacter(character) {
+    selectedCharacter = character;
+    for (const id of ['jao', 'alice']) {
+      const card = $(`character-${id}`), active = id === character;
+      card.classList.toggle('selected', active); card.setAttribute('aria-pressed', String(active));
+      card.querySelector('.character-selected-label').textContent = active ? 'SELECIONADO' : `ESCOLHER ${id.toUpperCase()}`;
+    }
+    $('play-button').textContent = `JOGAR COM ${character === 'alice' ? 'ALICE' : 'JÃO'}`;
   }
   setMode('menu');
   function reset() {
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null;
     toastCount = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
-  $('start-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
+  $('start-button').addEventListener('click', () => setMode('select'));
+  $('back-to-menu').addEventListener('click', () => setMode('menu'));
+  $('character-jao').addEventListener('click', () => selectCharacter('jao'));
+  $('character-alice').addEventListener('click', () => selectCharacter('alice'));
+  $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
   $('pause-button').addEventListener('click', () => { if (state === 'running') setMode('paused'); });
@@ -106,16 +122,30 @@
     enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8) });
   }
   function nearestEnemy() { let best = null, bd = Infinity; for (const e of enemies) { const d = dist2(player, e); if (d < bd) { best = e; bd = d; } } return best; }
-  function fire(target, damage = player.damage, speed = player.shotSpeed, color = '#54dcff', count = 1) {
+  const aliceElements = [
+    { id: 'poison', name: 'Verde venenoso', short: 'VENENO', color: '#71e56d' },
+    { id: 'slow', name: 'Azul congelante', short: 'LENTO', color: '#63caff' },
+    { id: 'lifesteal', name: 'Vermelho vampírico', short: 'ROUBO', color: '#ff5d75' },
+    { id: 'charm', name: 'Rosa encantado', short: 'CHARME', color: '#ff79c8' }
+  ];
+  function fire(target, damage = player.damage, speed = player.shotSpeed, color = '#54dcff', count = 1, element = null, scratch = false) {
     if (!target) return;
     const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1;
     const aim = Math.atan2(dy, dx);
-    for (let i = 0; i < count; i++) { const angle = aim + (i - (count - 1) / 2) * .12; bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, life: 1.5, color, r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: color === '#54dcff' ? player.pierce : 0, hitEnemies: new Set() }); }
-    if (color === '#54dcff') { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
+    for (let i = 0; i < count; i++) { const angle = aim + (i - (count - 1) / 2) * .12; bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, life: 1.5, color, element, scratch, r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce, hitEnemies: new Set() }); }
+    if (color === '#54dcff' || scratch) { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(player.x + dx / len * 14, player.y + dy / len * 14, '#c9f8ff', 4, .45); sound(680, .045, 'triangle', .018);
   }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
+    if (player.character === 'alice') {
+      player.nailElement = (player.nailElement + 1) % aliceElements.length;
+      const element = aliceElements[player.nailElement]; player.ult = player.ultMax;
+      ultimateVfx = { x: player.x, y: player.y, radius: 135, life: .48, max: .48, targets: [], color: element.color, type: 'palette' };
+      emit(player.x, player.y, element.color, 24, 1.25); floatText(player.x, player.y - 44, element.short, element.color);
+      sound(540, .22, 'triangle', .045); showToast(`Esmalte ${element.name}: ${element.id === 'poison' ? 'veneno' : element.id === 'slow' ? 'lentidão' : element.id === 'lifesteal' ? 'roubo de vida' : 'inimigos recebem mais dano'}.`);
+      updateHud(); return;
+    }
     const radius = player.ultRadius, radius2 = radius * radius;
     const chainTargets = enemies.filter(e => dist2(player, e) < radius2).sort((a, b) => b.hp - a.hp).slice(0, 4);
     const chainSet = new Set(chainTargets);
@@ -124,14 +154,21 @@
     emit(player.x, player.y, '#b9f7ff', 32, 2.2); sound(170, .32, 'sawtooth', .045);
     for (const e of enemies) {
       if (dist2(player, e) >= radius2) continue;
-      e.hp -= player.damage * 1.1 * player.ultDamage;
+      e.hp -= player.damage * 1.1 * player.ultDamage * (e.vulnerableTimer > 0 ? 1.25 : 1);
       e.hit = .3;
       emit(e.x, e.y, '#c5faff', chainSet.has(e) ? 7 : 2, .8);
-      if (chainSet.has(e)) { e.hp -= player.damage * 1.5 * player.ultDamage; e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
+      if (chainSet.has(e)) { e.hp -= player.damage * 1.5 * player.ultDamage * (e.vulnerableTimer > 0 ? 1.25 : 1); e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
       if (e.hp <= 0) defeat(e);
     }
     for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) enemies.splice(i, 1);
     showToast('ULTIMATE: RAJADA DE CHOQUE!');
+  }
+  function applyNailEffect(enemy, element, damage) {
+    if (!element) return;
+    if (element.id === 'poison') { enemy.poisonTimer = 4 * player.nailPower; enemy.poisonDps = Math.max(enemy.poisonDps || 0, player.damage * .22 * player.nailPower); }
+    else if (element.id === 'slow') enemy.slowTimer = Math.max(enemy.slowTimer || 0, 2.4 * player.nailPower);
+    else if (element.id === 'lifesteal') player.hp = Math.min(player.maxHp, player.hp + damage * Math.min(.55, .22 * player.nailPower));
+    else if (element.id === 'charm') enemy.vulnerableTimer = Math.max(enemy.vulnerableTimer || 0, 4 * player.nailPower);
   }
   function defeat(e) { kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
   function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
@@ -150,7 +187,7 @@
     { id: 'critical', rarity: 'epic', icon: '✹', category: 'COMBATE', title: 'Ponto fraco', desc: '+10% de chance de causar o dobro de dano.', apply: () => player.critChance = Math.min(.65, player.critChance + .1) },
     { id: 'ultimate', rarity: 'epic', icon: 'ϟ', category: 'ULTIMATE', title: 'Bateria carregada', desc: 'Reduz em 18% o tempo de recarga da ultimate.', apply: () => player.ultMax = Math.max(8, player.ultMax * .82) },
     { id: 'companion-bond', rarity: 'legendary', icon: '✺', category: 'SUPORTE', title: 'Laço elétrico', desc: 'Mini parceiros causam 40% mais dano e atiram 20% mais rápido.', apply: () => { player.companionDamage *= 1.4; player.companionRate = Math.max(.3, player.companionRate * .8); } },
-    { id: 'ult-field', rarity: 'legendary', icon: 'ϟ', category: 'ULTIMATE', title: 'Campo absoluto', desc: 'A ultimate alcança 18% mais longe e causa 20% mais dano.', apply: () => { player.ultRadius *= 1.18; player.ultDamage *= 1.2; } }
+    { id: 'ult-field', rarity: 'legendary', icon: 'ϟ', category: 'ULTIMATE', title: 'Campo absoluto', desc: 'A ultimate ganha alcance e dano; esmaltes da Alice ficam mais fortes.', apply: () => { player.ultRadius *= 1.18; player.ultDamage *= 1.2; player.nailPower *= 1.18; } }
   ];
   const rarityNames = { common: 'COMUM', rare: 'RARO', epic: 'ÉPICO', legendary: 'LENDÁRIO' };
   const rarityChances = { common: 45, rare: 30, epic: 18, legendary: 7 };
@@ -187,16 +224,19 @@
     if (moving) { player.facing = Math.abs(ix) > Math.abs(iy) ? (ix < 0 ? 2 : 3) : (iy < 0 ? 1 : 0); player.walk += dt * 9; }
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
-    fireTimer -= dt; if (fireTimer <= 0) { fire(nearestEnemy(), player.damage, player.shotSpeed, '#54dcff', player.multishot); fireTimer = player.fireRate; }
+    fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate; }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) fire(nearestEnemy(), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff'); companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
+      e.poisonTimer = Math.max(0, (e.poisonTimer || 0) - dt); e.slowTimer = Math.max(0, (e.slowTimer || 0) - dt); e.vulnerableTimer = Math.max(0, (e.vulnerableTimer || 0) - dt);
+      if (e.poisonTimer > 0) e.hp -= e.poisonDps * dt;
+      if (e.hp <= 0) { defeat(e); enemies.splice(i, 1); continue; }
       e.stun = Math.max(0, (e.stun || 0) - dt);
       if (e.stun > 0) { e.hit = Math.max(e.hit, .08); continue; }
-      e.x += dx / len * e.speed * dt; e.y += dy / len * e.speed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
+      const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
       if (len < e.radius + 17 && player.invuln <= 0) { player.hp -= e.damage; player.invuln = .62; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); }
     }
-    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, damage = b.damage * (critical ? 2 : 1); e.hp -= damage; e.hit = .12; emit(b.x, b.y, '#d7fbff', 8, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
+    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value); emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     chestTimer -= dt; if (!chest && chestTimer <= 0) { spawnChest(); chestTimer = 45; }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
@@ -209,7 +249,16 @@
     updateHud();
   }
   function gameOver() { player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level; try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {} setMode('gameover'); }
-  function updateHud() { ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`; ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills; ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`; ui.toastCount.textContent = toastCount; ui.toastUse.classList.toggle('hidden', toastCount <= 0 || state === 'menu' || state === 'gameover'); ui.toastUse.disabled = player.hp >= player.maxHp; }
+  function updateHud() {
+    ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`;
+    ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills;
+    ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`;
+    const element = player.nailElement >= 0 ? aliceElements[player.nailElement] : null;
+    ui.ultIcon.textContent = player.character === 'alice' ? '💅' : '⚡'; ui.ultLabel.textContent = player.character === 'alice' ? (element?.short || 'NAT') : 'ULT';
+    ui.ult.setAttribute('aria-label', player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : 'Ultimate de choque');
+    ui.ult.style.setProperty('--element-color', element?.color || '#dfe8ef'); ui.ult.classList.toggle('alice-ultimate', player.character === 'alice');
+    ui.toastCount.textContent = toastCount; ui.toastUse.classList.toggle('hidden', toastCount <= 0 || state !== 'running'); ui.toastUse.disabled = player.hp >= player.maxHp;
+  }
 
   function drawFloor() {
     ctx.fillStyle = '#17211f'; ctx.fillRect(0, 0, w, h);
@@ -223,25 +272,33 @@
     if (!ultimateVfx) return;
     const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .38, 0, 1), radius = v.radius * Math.min(1, progress * 1.65);
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    const effectColor = v.color || '#42dfff';
     for (let ring = 0; ring < 2; ring++) {
       const r = Math.max(2, radius - ring * 22), alpha = fade * (1 - ring * .25) * (.38 + Math.sin(progress * 16 + ring) * .1);
-      ctx.globalAlpha = alpha; ctx.strokeStyle = ring ? '#bffaff' : '#42dfff'; ctx.lineWidth = ring ? 2 : 4;
+      ctx.globalAlpha = alpha; ctx.strokeStyle = ring ? '#e5fbff' : effectColor; ctx.lineWidth = ring ? 2 : 4;
       ctx.beginPath(); ctx.arc(p.x, p.y, r, progress * 2.8 + ring * .7, progress * 2.8 + ring * .7 + Math.PI * 1.86); ctx.stroke();
     }
     ctx.globalAlpha = fade * .85;
     for (const target of v.targets) {
       const q = screenPos(target), dx = q.x - p.x, dy = q.y - p.y, len = Math.hypot(dx, dy) || 1, reach = Math.min(1, progress * 2.8);
       const endX = p.x + dx * reach, endY = p.y + dy * reach, segments = 5, seed = Math.sin(target.phase + progress * 41) * 5;
-      ctx.strokeStyle = '#a7f6ff'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(p.x, p.y);
+      ctx.strokeStyle = effectColor === '#42dfff' ? '#a7f6ff' : effectColor; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.moveTo(p.x, p.y);
       for (let s = 1; s < segments; s++) { const t = s / segments, offset = Math.sin(target.phase + s * 9.2 + progress * 36) * Math.min(13, len * .055); ctx.lineTo(p.x + dx * t - dy / len * (offset + seed), p.y + dy * t + dx / len * (offset + seed)); }
       ctx.lineTo(endX, endY); ctx.stroke();
       ctx.fillStyle = '#e7ffff'; ctx.beginPath(); ctx.arc(endX, endY, 3.2 + Math.sin(progress * 30 + target.phase) * 1.2, 0, Math.PI * 2); ctx.fill();
     }
-    ctx.globalAlpha = fade * (1 - progress * .35); ctx.fillStyle = '#dffcff'; ctx.beginPath(); ctx.arc(p.x, p.y, 8 + progress * 9, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = fade * (1 - progress * .35); ctx.fillStyle = effectColor === '#42dfff' ? '#dffcff' : effectColor; ctx.beginPath(); ctx.arc(p.x, p.y, 8 + progress * 9, 0, Math.PI * 2); ctx.fill();
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   function drawBullet(b) {
     const p = screenPos(b); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (b.scratch) {
+      const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (let i = 0; i < b.trail.length; i += 2) { const t = b.trail[i], dx = t.x - b.x, dy = t.y - b.y, tx = dx * Math.cos(angle) + dy * Math.sin(angle), ty = -dx * Math.sin(angle) + dy * Math.cos(angle); ctx.save(); ctx.globalAlpha = .12 * (1 - i / b.trail.length); ctx.translate(tx, ty); ctx.strokeStyle = b.color; ctx.lineWidth = 2; for (let claw = -1; claw <= 1; claw++) { ctx.beginPath(); ctx.moveTo(-6, claw * 4 + 2); ctx.lineTo(-2, claw * 4 - 2); ctx.lineTo(4, claw * 4 + 1); ctx.stroke(); } ctx.restore(); }
+      ctx.globalAlpha = .95; ctx.strokeStyle = b.color; ctx.lineWidth = 2.7;
+      for (let claw = -1; claw <= 1; claw++) { const y = claw * 4; ctx.beginPath(); ctx.moveTo(-8, y + 2); ctx.lineTo(-3, y - 2); ctx.lineTo(2, y + 1); ctx.lineTo(8, y - 3); ctx.stroke(); }
+      ctx.globalAlpha = .8; ctx.strokeStyle = '#fff1f8'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(1, -1); ctx.stroke(); ctx.restore(); return;
+    }
     for (let i = b.trail.length - 1; i >= 0; i--) { const q = screenPos(b.trail[i]), fade = (1 - i / b.trail.length) * .42; ctx.globalAlpha = fade; ctx.fillStyle = i < 2 ? '#e3fcff' : b.color; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, b.r * (1 - i / (b.trail.length + 1)) * .72), 0, Math.PI * 2); ctx.fill(); }
     ctx.globalAlpha = .22; ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(b.vy, b.vx)); ctx.fillStyle = b.color; ctx.beginPath(); ctx.ellipse(0, 0, b.r * 2.2, b.r * 1.45, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
     ctx.fillStyle = b.color; ctx.beginPath(); ctx.ellipse(0, 0, b.r * 1.75, b.r * .9, 0, 0, Math.PI * 2); ctx.fill();
@@ -249,15 +306,16 @@
     ctx.rotate(Math.sin(b.phase) * .35); ctx.strokeStyle = '#aaf5ff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(-b.r * 2.5, 0); ctx.lineTo(-b.r * 1.8, -3); ctx.lineTo(-b.r * 1.2, 2); ctx.stroke();
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
-  function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);ctx.fillStyle=e.stun>0?'#83efff':e.hit?'#fff':e.color;
+  function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);const statusColor=e.poisonTimer>0?'#78ed6f':e.slowTimer>0?'#66caff':e.vulnerableTimer>0?'#ff79c8':e.color;ctx.fillStyle=e.stun>0?'#83efff':e.hit?'#fff':statusColor;
     if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
     else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
     ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1); if(e.kind==='brute'){ctx.fillStyle='#ffc773';ctx.fillRect(-r*.68,-r*1.12,5,8);ctx.fillRect(r*.4,-r*1.12,5,8);} ctx.restore();
     if(e.hp<e.max){ctx.fillStyle='#0d1014';ctx.fillRect(p.x-r,p.y-r-10,r*2,3);ctx.fillStyle='#ff6979';ctx.fillRect(p.x-r,p.y-r-10,r*2*clamp(e.hp/e.max,0,1),3);}
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
-    if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-    if(atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
+    if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
+    if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
+    else if(player.character !== 'alice' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     for(const c of companions){const x=sx+Math.cos(c.angle)*38,y=sy+Math.sin(c.angle)*22;ctx.globalAlpha=.25;ctx.fillStyle='#bb83ff';ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#d9b8ff';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();}

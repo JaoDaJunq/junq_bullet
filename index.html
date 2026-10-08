@@ -21,7 +21,7 @@
   <div id="chest-status" class="chest-status hidden"><span id="chest-label">Fica parado para abrir</span><div class="meter"><i id="chest-fill"></i></div></div>
   <div id="pickup-status" class="pickup-status hidden"><span class="pickup-gem">✦</span><span id="pickup-label">Item no chão</span></div>
   <div id="joystick" class="joystick hidden"><div id="stick"></div></div>
-  <button id="ultimate-button" class="ultimate hidden"><span>⚡</span><small>ULT</small><i id="ult-fill"></i></button>
+  <button id="ultimate-button" class="ultimate hidden"><span id="ultimate-icon">⚡</span><small id="ultimate-label">ULT</small><i id="ult-fill"></i></button>
   <button id="toast-use" class="inventory-use hidden" aria-label="Usar Torrada da Gorda">
     <img src="assets/toastada-gorda.png" alt="">
     <span id="toast-count" class="inventory-count">0</span>
@@ -36,8 +36,32 @@
       <p>Segura a horda. Cresce. Não para.</p>
       <div class="arena-label"><i></i> ARENA PROCEDURAL · NOITE</div>
       <div class="feature-row"><span>⚡ tiro automático</span><span>↑ evolução</span><span>▣ baús</span></div>
-      <button id="start-button" class="primary"><span>COMEÇAR A PARTIDA</span><b>↗</b></button>
-      <small class="help">PC: WASD / setas · Espaço: ultimate · F: usar torrada · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate · botão da torrada: curar</small>
+      <button id="start-button" class="primary"><span>ESCOLHER PERSONAGEM</span><b>↗</b></button>
+      <small class="help">PC: WASD / setas · Espaço: ultimate (Alice: avança o esmalte) · F: usar torrada · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate/esmalte da Alice · torrada: curar</small>
+    </section>
+    <section id="character-select" class="panel hidden character-panel">
+      <div class="eyebrow">ESCOLHE TEU SOBREVIVENTE</div>
+      <h2>Quem encara a horda?</h2>
+      <div class="character-grid">
+        <button id="character-jao" class="character-card selected" type="button" aria-pressed="true">
+          <span class="character-art character-art-jao" aria-hidden="true"></span>
+          <span class="character-name">JÃO</span>
+          <span class="character-weapon">TIRO ELÉTRICO</span>
+          <span class="character-description">Dispara energia no inimigo mais próximo. A ultimate solta uma rajada e atordoa os quatro mais resistentes.</span>
+          <span class="character-selected-label">SELECIONADO</span>
+        </button>
+        <button id="character-alice" class="character-card" type="button" aria-pressed="false">
+          <span class="character-art character-art-alice" aria-hidden="true"></span>
+          <span class="character-name">ALICE</span>
+          <span class="character-weapon">ARRANHÃO DE NAIL ART</span>
+          <span class="character-description">Cada ultimate avança o esmalte: verde envenena, azul reduz velocidade, vermelho rouba vida e rosa marca o alvo, que recebe +25% de dano por 4s.</span>
+          <span class="character-selected-label">SELECIONAR ALICE</span>
+        </button>
+      </div>
+      <div class="character-actions">
+        <button id="back-to-menu" class="secondary-button" type="button">VOLTAR</button>
+        <button id="play-button" class="primary" type="button">JOGAR COM JÃO</button>
+      </div>
     </section>
     <section id="upgrade-panel" class="panel hidden">
       <div class="eyebrow">NÍVEL ALCANÇADO · ESCOLHE 1</div><h2>Qual vai ser teu próximo poder?</h2>

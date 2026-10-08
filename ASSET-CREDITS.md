@@ -3,6 +3,7 @@
 ## Incluídos nesta primeira build
 
 - `assets/jao-walk.png`: personagem original inspirado na referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
+- `assets/alice-walk.png`: personagem original inspirado na foto de referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
 - Inimigos, cenário, baú, projéteis e efeitos: formas vetoriais desenhadas pelo próprio jogo em Canvas para o protótipo.
 
 ## Pacotes públicos avaliados para próximas iterações
