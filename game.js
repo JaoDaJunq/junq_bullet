@@ -294,10 +294,18 @@
     const p = screenPos(b); ctx.save(); ctx.globalCompositeOperation = 'lighter';
     if (b.scratch) {
       const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      for (let i = 0; i < b.trail.length; i += 2) { const t = b.trail[i], dx = t.x - b.x, dy = t.y - b.y, tx = dx * Math.cos(angle) + dy * Math.sin(angle), ty = -dx * Math.sin(angle) + dy * Math.cos(angle); ctx.save(); ctx.globalAlpha = .12 * (1 - i / b.trail.length); ctx.translate(tx, ty); ctx.strokeStyle = b.color; ctx.lineWidth = 2; for (let claw = -1; claw <= 1; claw++) { ctx.beginPath(); ctx.moveTo(-6, claw * 4 + 2); ctx.lineTo(-2, claw * 4 - 2); ctx.lineTo(4, claw * 4 + 1); ctx.stroke(); } ctx.restore(); }
-      ctx.globalAlpha = .95; ctx.strokeStyle = b.color; ctx.lineWidth = 2.7;
-      for (let claw = -1; claw <= 1; claw++) { const y = claw * 4; ctx.beginPath(); ctx.moveTo(-8, y + 2); ctx.lineTo(-3, y - 2); ctx.lineTo(2, y + 1); ctx.lineTo(8, y - 3); ctx.stroke(); }
-      ctx.globalAlpha = .8; ctx.strokeStyle = '#fff1f8'; ctx.lineWidth = .8; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.lineTo(1, -1); ctx.stroke(); ctx.restore(); return;
+      const slash = (y, alpha, scale = 1) => {
+        ctx.save(); ctx.globalAlpha = alpha; ctx.scale(scale, scale);
+        ctx.beginPath(); ctx.moveTo(-12, y + 2); ctx.quadraticCurveTo(-2, y - 1, 10, y - 7); ctx.lineTo(13, y - 9); ctx.quadraticCurveTo(5, y - 1, -10, y + 5); ctx.closePath();
+        ctx.fillStyle = b.color; ctx.fill(); ctx.lineWidth = 1; ctx.strokeStyle = '#551239'; ctx.stroke(); ctx.restore();
+      };
+      for (let i = 0; i < b.trail.length; i += 2) {
+        const t = b.trail[i], dx = t.x - b.x, dy = t.y - b.y, tx = dx * Math.cos(angle) + dy * Math.sin(angle), ty = -dx * Math.sin(angle) + dy * Math.cos(angle);
+        ctx.save(); ctx.translate(tx, ty); for (let claw = -1; claw <= 1; claw++) slash(claw * 4, .1 * (1 - i / b.trail.length), .62); ctx.restore();
+      }
+      for (let claw = -1; claw <= 1; claw++) slash(claw * 4, .92);
+      ctx.globalAlpha = .9; ctx.strokeStyle = '#fff1f8'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(-7, 0); ctx.quadraticCurveTo(0, -2, 7, -5); ctx.stroke();
+      ctx.restore(); return;
     }
     for (let i = b.trail.length - 1; i >= 0; i--) { const q = screenPos(b.trail[i]), fade = (1 - i / b.trail.length) * .42; ctx.globalAlpha = fade; ctx.fillStyle = i < 2 ? '#e3fcff' : b.color; ctx.beginPath(); ctx.arc(q.x, q.y, Math.max(1, b.r * (1 - i / (b.trail.length + 1)) * .72), 0, Math.PI * 2); ctx.fill(); }
     ctx.globalAlpha = .22; ctx.translate(p.x, p.y); ctx.rotate(Math.atan2(b.vy, b.vx)); ctx.fillStyle = b.color; ctx.beginPath(); ctx.ellipse(0, 0, b.r * 2.2, b.r * 1.45, 0, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
