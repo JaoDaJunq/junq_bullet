@@ -113,6 +113,7 @@
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
@@ -191,7 +192,7 @@
       player.aimX = aimX; player.aimY = aimY;
     }
     const center = Math.atan2(aimY, aimX), count = options.count ?? 3, spread = options.spread ?? .52;
-    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .22);
+    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .30);
     for (let i = 0; i < count; i++) {
       const angle = center + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
       const cardColor = options.ultimate ? (i % 2 ? '#ffd16b' : '#fff0ce') : (i % 2 ? '#f25566' : '#f4ead0');
@@ -216,7 +217,7 @@
     }
     if (player.character === 'gui') {
       const target = nearestEnemy();
-      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1, life: 1.4, pierce: 99, stun: .9, ultimate: true });
+      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1.15, life: 1.4, pierce: 99, stun: .9, ultimate: true });
       const angle = Math.atan2(player.aimY, player.aimX); startUltimateCooldown();
       ultimateVfx = { x: player.x, y: player.y, radius: 330, spread: 1.92, angle, life: .62, max: .62, targets: [], color: '#ffd16b', type: 'cardFan' };
       emit(player.x, player.y, '#ffd16b', 28, 1.5); floatText(player.x, player.y - 46, 'MÃO DE TRUNFO!', '#ffe39a');
