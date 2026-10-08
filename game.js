@@ -17,15 +17,18 @@
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
     options: $('upgrade-options'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
     pickup: $('pickup-status'), pickupLabel: $('pickup-label'),
-    joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultFill: $('ult-fill')
+    joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
   let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null;
+  let toastCount = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
   const player = { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
+  const toastSprite = new Image();
+  toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
     [[115,13,173,300],[85,12,177,302],[51,13,173,301],[27,12,177,302]],
     [[115,6,173,304],[85,6,177,304],[51,6,177,303],[26,0,172,310]],
@@ -60,6 +63,7 @@
   setMode('menu');
   function reset() {
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null;
+    toastCount = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, pickup: 110, companion: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
@@ -69,12 +73,14 @@
   $('resume-button').addEventListener('click', () => setMode('running'));
   $('pause-button').addEventListener('click', () => { if (state === 'running') setMode('paused'); });
   $('ultimate-button').addEventListener('pointerdown', (e) => { e.preventDefault(); castUltimate(); });
+  ui.toastUse.addEventListener('click', useToast);
   addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase(); keys.add(key);
     if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(key)) e.preventDefault();
     if ((key === 'p' || key === 'escape') && state === 'running') setMode('paused');
     else if ((key === 'p' || key === 'escape') && state === 'paused') setMode('running');
     if (key === ' ' && state === 'running') castUltimate();
+    if (key === 'f' && state === 'running') useToast();
     if (state === 'upgrade' && ['1','2','3'].includes(key)) chooseUpgrade(Number(key) - 1);
   });
   addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
@@ -141,7 +147,16 @@
   function makeUpgradeOptions() { currentChoices = [...upgrades].sort(() => Math.random() - .5).slice(0, 3); ui.options.innerHTML = ''; currentChoices.forEach((u, i) => { const b = document.createElement('button'); b.className = `upgrade-card rarity-${u.rarity}`; b.setAttribute('aria-label', `${rarityNames[u.rarity]} · ${i + 1}: ${u.title}. ${u.desc}`); b.innerHTML = `<span class="card-rarity">${rarityNames[u.rarity]}</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`; b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b); }); }
   function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; currentChoices[i].apply(); setMode('running'); showToast(`${currentChoices[i].title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
-  function openChest() { const reward = upgrades[Math.floor(Math.random() * upgrades.length)]; items.push({ x: chest.x, y: chest.y, reward, pulse: 0, age: 0 }); chestProgress = 0; emit(chest.x, chest.y, '#ffd66e', 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, 'ITEM!', '#ffe69a'); showToast('Baú aberto: 1 item caiu. Chega perto para pegar!'); chest = null; ui.chest.classList.add('hidden'); }
+  function openChest() { items.push({ x: chest.x, y: chest.y, kind: 'toast', pulse: 0, age: 0 }); chestProgress = 0; emit(chest.x, chest.y, '#ffd66e', 35, 1.6); sound(880, .3, 'triangle', .05); floatText(chest.x, chest.y - 35, '🍞!', '#ffe69a'); showToast('Baú aberto: a Torrada da Gorda caiu! Chega perto para pegar.'); chest = null; ui.chest.classList.add('hidden'); }
+
+  function useToast() {
+    if (toastCount <= 0) { showToast('Não tem Torrada da Gorda no inventário.'); return; }
+    if (player.hp >= player.maxHp) { showToast('Tua vida já está cheia. Guarda a torrada para depois!'); return; }
+    const healed = Math.min(18, player.maxHp - player.hp);
+    player.hp += healed; toastCount--;
+    emit(player.x, player.y, '#8dffb0', 18, .9); floatText(player.x, player.y - 34, `+${Math.round(healed)} VIDA`, '#a9ffbe');
+    sound(740, .2, 'sine', .04); showToast(`Torrada da Gorda usada: +${Math.round(healed)} de vida.`); updateHud();
+  }
 
   function update(dt) {
     elapsed += dt; player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt); player.shotFlash = Math.max(0, player.shotFlash - dt); if (ultimateVfx && (ultimateVfx.life -= dt) <= 0) ultimateVfx = null;
@@ -166,15 +181,15 @@
     chestTimer -= dt; if (!chest && chestTimer <= 0) { spawnChest(); chestTimer = 45; }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
     let nearbyItem = null, nearbyItemDistance = Infinity;
-    for (let i = items.length - 1; i >= 0; i--) { const item = items[i], d = Math.sqrt(dist2(player, item)); item.pulse += dt * 4; item.age += dt; if (d < nearbyItemDistance) { nearbyItem = item; nearbyItemDistance = d; } if (d < 34) { item.reward.apply(); player.hp = Math.min(player.maxHp, player.hp + 18); emit(item.x, item.y, '#ffe59a', 28, 1.35); sound(920, .22, 'triangle', .045); floatText(item.x, item.y - 25, item.reward.title, '#ffe69a'); showToast(`Item coletado: ${item.reward.title}! +18 vida`); items.splice(i, 1); nearbyItem = null; nearbyItemDistance = Infinity; } }
-    if (nearbyItem && nearbyItemDistance < 92) { ui.pickup.classList.remove('hidden'); ui.pickupLabel.textContent = nearbyItemDistance < 34 ? `Pega: ${nearbyItem.reward.title}` : `Item no chão: ${nearbyItem.reward.title}`; } else ui.pickup.classList.add('hidden');
+    for (let i = items.length - 1; i >= 0; i--) { const item = items[i], d = Math.sqrt(dist2(player, item)); item.pulse += dt * 4; item.age += dt; if (d < nearbyItemDistance) { nearbyItem = item; nearbyItemDistance = d; } if (d < 34) { toastCount++; emit(item.x, item.y, '#ffe59a', 28, 1.35); sound(920, .22, 'triangle', .045); floatText(item.x, item.y - 25, 'Torrada +1', '#ffe69a'); showToast(`Torrada da Gorda guardada no inventário (${toastCount}).`); items.splice(i, 1); nearbyItem = null; nearbyItemDistance = Infinity; } }
+    if (nearbyItem && nearbyItemDistance < 92) { ui.pickup.classList.remove('hidden'); ui.pickupLabel.textContent = nearbyItemDistance < 34 ? 'Pega: Torrada da Gorda' : 'Torrada da Gorda no chão'; } else ui.pickup.classList.add('hidden');
     for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .94; p.vy *= .94; p.life -= dt; if (p.life <= 0) particles.splice(i, 1); }
     for (let i = floating.length - 1; i >= 0; i--) { const f = floating[i]; f.y -= 23 * dt; f.life -= dt; if (f.life <= 0) floating.splice(i, 1); }
     if (toastTimer > 0 && (toastTimer -= dt) <= 0) ui.toast.classList.add('hidden');
     updateHud();
   }
   function gameOver() { player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level; try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {} setMode('gameover'); }
-  function updateHud() { ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`; ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills; ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`; }
+  function updateHud() { ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`; ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills; ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`; ui.toastCount.textContent = toastCount; ui.toastUse.classList.toggle('hidden', toastCount <= 0 || state === 'menu' || state === 'gameover'); ui.toastUse.disabled = player.hp >= player.maxHp; }
 
   function drawFloor() {
     ctx.fillStyle = '#17211f'; ctx.fillRect(0, 0, w, h);
@@ -183,7 +198,7 @@
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
   function drawChest() { if (!chest) return; const p = screenPos(chest); ctx.save(); ctx.translate(p.x,p.y+Math.sin(chest.pulse)*3); ctx.fillStyle='rgba(255,200,93,.16)';ctx.fillRect(-20,-18,40,40);ctx.fillStyle='#b96d26';ctx.fillRect(-15,-10,30,22);ctx.fillStyle='#edb84e';ctx.fillRect(-16,-14,32,9);ctx.fillStyle='#78421d';ctx.fillRect(-3,-7,6,17);ctx.fillStyle='#fff0a0';ctx.fillRect(-2,-7,4,5);ctx.restore(); }
-  function drawItem(item) { const p = screenPos(item), bob = Math.sin(item.pulse) * 4, spin = item.pulse * .38; ctx.save(); ctx.translate(p.x, p.y - 4 - bob); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd76b'; ctx.globalAlpha = .18 + Math.sin(item.pulse * 1.6) * .06; ctx.beginPath(); ctx.arc(0, 0, 24 + Math.sin(item.pulse) * 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.rotate(spin); ctx.fillStyle = '#ffcd5d'; ctx.strokeStyle = '#fff2b2'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(12, 0); ctx.lineTo(0, 13); ctx.lineTo(-12, 0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.rotate(-spin); ctx.font = 'bold 15px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff9d9'; ctx.fillText(item.reward.icon, 0, 1); ctx.restore(); }
+  function drawItem(item) { const p = screenPos(item), bob = Math.sin(item.pulse) * 3; ctx.save(); ctx.translate(p.x, p.y - 6 - bob); ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffd76b'; ctx.globalAlpha = .16 + Math.sin(item.pulse * 1.6) * .05; ctx.beginPath(); ctx.arc(0, 0, 22 + Math.sin(item.pulse) * 2, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; if (toastSprite.complete && toastSprite.naturalWidth) ctx.drawImage(toastSprite, -18, -18, 36, 36); else { ctx.font = 'bold 24px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('🍞', 0, 0); } ctx.restore(); }
   function drawUltimate() {
     if (!ultimateVfx) return;
     const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .38, 0, 1), radius = v.radius * Math.min(1, progress * 1.65);
