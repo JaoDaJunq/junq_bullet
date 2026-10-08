@@ -11,7 +11,7 @@ Baixe o ZIP do repositório, extraia e abra `index.html` no navegador. Também p
 - PC: WASD ou setas para andar, Espaço para a ultimate, P ou Esc para pausar.
 - Celular: joystick no canto inferior esquerdo e botão de ultimate no canto inferior direito.
 - O personagem ataca automaticamente o inimigo mais próximo.
-- Gui dispara três cartas em cone; a ultimate Mão de Trunfo lança um leque maior, perfura e atordoa os inimigos atingidos.
+- Gui dispara três cartas em cone curto, com dano alto de perto e alcance limitado; a ultimate Mão de Trunfo lança um leque maior, perfura e atordoa os inimigos atingidos.
 - Ao subir de nível, escolha uma das três melhorias. Também aparecem baús que abrem depois de três segundos parado perto deles.
 
 ## Estado deste protótipo

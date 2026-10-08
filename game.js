@@ -190,14 +190,14 @@
       const len = Math.hypot(player.vx, player.vy); aimX = player.vx / len; aimY = player.vy / len;
       player.aimX = aimX; player.aimY = aimY;
     }
-    const center = Math.atan2(aimY, aimX), count = options.count ?? 3, spread = options.spread ?? .88;
-    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .55);
+    const center = Math.atan2(aimY, aimX), count = options.count ?? 3, spread = options.spread ?? .52;
+    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .22);
     for (let i = 0; i < count; i++) {
       const angle = center + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
       const cardColor = options.ultimate ? (i % 2 ? '#ffd16b' : '#fff0ce') : (i % 2 ? '#f25566' : '#f4ead0');
       bullets.push({ x: player.x + aimX * 15, y: player.y + aimY * 15, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        damage, life: options.life || 1.3, color: cardColor, card: true, ultimate: !!options.ultimate, stun: options.stun || 0,
-        r: options.ultimate ? 8 : 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: options.pierce ?? player.pierce, hitEnemies: sharedHits });
+        damage, life: options.life ?? (options.ultimate ? 1.4 : .62), color: cardColor, card: true, ultimate: !!options.ultimate, stun: options.stun || 0,
+        r: options.ultimate ? 8 : 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: options.pierce ?? player.pierce, hitEnemies: options.ultimate ? sharedHits : new Set() });
     }
     player.shotFlash = options.ultimate ? .42 : .14;
     emit(player.x + aimX * 18, player.y + aimY * 18, options.ultimate ? '#ffd16b' : '#fff0ce', options.ultimate ? 30 : 6, options.ultimate ? 1.25 : .45);
