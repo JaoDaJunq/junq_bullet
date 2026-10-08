@@ -4,7 +4,8 @@
 
 - `assets/jao-walk.png`: personagem original inspirado na referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
 - `assets/alice-walk.png`: personagem original inspirado na foto de referência fornecida pelo usuário, gerado para este projeto. Não é um asset de terceiros.
-- `assets/enemy-blob.png`, `assets/enemy-bat.png`, `assets/enemy-wolf.png`, `assets/enemy-roach.png` e `assets/enemy-boss.png`: recortes das concepts aprovadas para o projeto, preparados como sprites de validação. Não são assets de terceiros.
+- Inimigos: desenhos vetoriais originais em Canvas, baseados nas concepts aprovadas e integrados à linguagem simples do protótipo.
+- `assets/enemy-blob.png`, `assets/enemy-bat.png`, `assets/enemy-wolf.png`, `assets/enemy-roach.png` e `assets/enemy-boss.png`: recortes das concepts anteriores, mantidos como referência e não carregados durante a partida.
 - Cenário, baú, projéteis e efeitos: formas vetoriais desenhadas pelo próprio jogo em Canvas para o protótipo.
 
 ## Pacotes públicos avaliados para próximas iterações

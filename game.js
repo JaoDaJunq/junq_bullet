@@ -20,7 +20,7 @@
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
-  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao', bossSpawned = false;
+  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 55, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao', bossSpawned = false;
   let toastCount = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
@@ -29,8 +29,6 @@
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
   aliceAtlas.src = 'assets/alice-walk.png';
-  const enemySprites = {};
-  for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
   const toastSprite = new Image();
   toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
@@ -76,7 +74,7 @@
   }
   setMode('menu');
   function reset() {
-    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
+    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
@@ -117,7 +115,7 @@
   function floatText(x, y, text, color = '#fff') { floating.push({ x, y, text, color, life: .8 }); }
   function spawnEnemy(forcedKind = null) {
     if (enemies.length >= MAX_ENEMIES) return;
-    const a = rand(0, Math.PI * 2), r = forcedKind === 'boss' ? Math.min(w, h) * .38 : Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
+    const a = rand(0, Math.PI * 2), r = forcedKind === 'boss' ? Math.min(w, h) * .64 : Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
     const roll = Math.random();
     let kind = forcedKind || 'blob';
     if (!forcedKind) { if (t > 14 && roll > .6) kind = 'bat'; if (t > 25 && roll > .79) kind = 'wolf'; if (t > 34 && roll > .91) kind = 'roach'; }
@@ -246,7 +244,7 @@
     }
     for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value); emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
-    chestTimer -= dt; if (!chest && chestTimer <= 0) { spawnChest(); chestTimer = 45; }
+    if (!chest) { chestTimer -= dt; if (chestTimer <= 0) { spawnChest(); chestTimer = 80; } }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
     let nearbyItem = null, nearbyItemDistance = Infinity;
     for (let i = items.length - 1; i >= 0; i--) { const item = items[i], d = Math.sqrt(dist2(player, item)); item.pulse += dt * 4; item.age += dt; if (d < nearbyItemDistance) { nearbyItem = item; nearbyItemDistance = d; } if (d < 34) { toastCount++; emit(item.x, item.y, '#ffe59a', 28, 1.35); sound(920, .22, 'triangle', .045); floatText(item.x, item.y - 25, 'Torrada +1', '#ffe69a'); showToast(`Torrada da Gorda guardada no inventário (${toastCount}).`); items.splice(i, 1); nearbyItem = null; nearbyItemDistance = Infinity; } }
@@ -323,24 +321,55 @@
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   function drawEnemy(e) {
-    const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius, sprite = enemySprites[e.kind];
-    const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 48;
-    const scale = sprite?.naturalWidth ? size / Math.max(sprite.naturalWidth, sprite.naturalHeight) : 1;
-    const drawWidth = sprite?.naturalWidth ? sprite.naturalWidth * scale : size, drawHeight = sprite?.naturalHeight ? sprite.naturalHeight * scale : size;
-    ctx.save(); ctx.translate(p.x, p.y + bob);
-    if (sprite?.complete && sprite.naturalWidth) {
-      ctx.globalAlpha = e.hit ? .72 : 1;
-      ctx.drawImage(sprite, -drawWidth / 2, -drawHeight * .58, drawWidth, drawHeight);
-      ctx.globalAlpha = 1;
-      if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
-    } else {
-      const statusColor=e.poisonTimer>0?'#78ed6f':e.slowTimer>0?'#66caff':e.vulnerableTimer>0?'#ff79c8':e.color; ctx.fillStyle=e.stun>0?'#83efff':e.hit?'#fff':statusColor;
-      if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
-      else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
-      ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1);
+    const p = screenPos(e), r = e.radius;
+    const dx = player.x - e.x, dy = player.y - e.y;
+    const facing = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? -Math.PI / 2 : Math.PI / 2) : (dy > 0 ? 0 : Math.PI);
+    const statusColor = e.poisonTimer > 0 ? '#78ed6f' : e.slowTimer > 0 ? '#66caff' : e.vulnerableTimer > 0 ? '#ff79c8' : null;
+    const outline = '#25212a', body = e.hit ? '#fff1e8' : statusColor || e.color;
+    ctx.save(); ctx.translate(p.x, p.y); ctx.fillStyle = '#07101077'; ctx.beginPath(); ctx.ellipse(0, r * .68, r * 1.08, r * .4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.rotate(facing); ctx.lineWidth = Math.max(1.5, r * .075); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    if (e.kind === 'blob') {
+      ctx.fillStyle = body; ctx.strokeStyle = outline; ctx.beginPath(); ctx.ellipse(0, 0, r * 1.08, r * .82, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f9b2d8'; ctx.beginPath(); ctx.ellipse(-r * .42, -r * .34, r * .22, r * .13, -.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ffe6a4'; ctx.fillRect(-r * .78, r * .52, r * .46, r * .24); ctx.fillRect(r * .32, r * .52, r * .46, r * .24);
+      ctx.fillStyle = '#241b27'; ctx.fillRect(-r * .48, r * .05, r * .2, r * .26); ctx.fillRect(r * .28, r * .05, r * .2, r * .26);
+    } else if (e.kind === 'bat') {
+      ctx.fillStyle = '#514166'; ctx.strokeStyle = outline; ctx.beginPath(); ctx.moveTo(-r * .35, -r * .1); ctx.lineTo(-r * 1.55, -r * .9); ctx.lineTo(-r * 1.3, r * .55); ctx.lineTo(-r * .45, r * .32); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r * .35, -r * .1); ctx.lineTo(r * 1.55, -r * .9); ctx.lineTo(r * 1.3, r * .55); ctx.lineTo(r * .45, r * .32); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 0, r * .7, r * .85, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ffd45e'; ctx.beginPath(); ctx.arc(-r * .28, r * .15, r * .12, 0, Math.PI * 2); ctx.arc(r * .28, r * .15, r * .12, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e7a84e'; ctx.beginPath(); ctx.moveTo(-r * .18, r * .42); ctx.lineTo(r * .18, r * .42); ctx.lineTo(0, r * .68); ctx.closePath(); ctx.fill();
+    } else if (e.kind === 'wolf') {
+      ctx.strokeStyle = outline; ctx.fillStyle = '#a94e42'; ctx.lineWidth = r * .2; ctx.beginPath(); ctx.moveTo(0, -r * .55); ctx.quadraticCurveTo(r * .85, -r * .95, r * .7, -r * .35); ctx.stroke();
+      ctx.lineWidth = r * .07; ctx.fillStyle = '#46404b'; ctx.beginPath(); ctx.ellipse(0, -r * .08, r * .88, r * .7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#514750'; ctx.fillRect(-r * .74, r * .1, r * .34, r * .72); ctx.fillRect(r * .4, r * .1, r * .34, r * .72);
+      ctx.beginPath(); ctx.ellipse(0, r * .42, r * .62, r * .48, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#3b3540'; ctx.beginPath(); ctx.moveTo(-r * .52, r * .12); ctx.lineTo(-r * .55, -r * .45); ctx.lineTo(-r * .12, -r * .08); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(r * .52, r * .12); ctx.lineTo(r * .55, -r * .45); ctx.lineTo(r * .12, -r * .08); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#ff9a43'; ctx.fillRect(-r * .4, r * .28, r * .22, r * .12); ctx.fillRect(r * .18, r * .28, r * .22, r * .12);
+      ctx.fillStyle = '#2c2630'; ctx.beginPath(); ctx.arc(0, r * .68, r * .17, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#e1a957'; ctx.fillRect(-r * .82, r * .76, r * .42, r * .2); ctx.fillRect(r * .4, r * .76, r * .42, r * .2);
+    } else if (e.kind === 'roach') {
+      ctx.strokeStyle = outline; ctx.fillStyle = '#9b5735'; ctx.lineWidth = r * .08;
+      for (const side of [-1, 1]) for (let leg = 0; leg < 3; leg++) { const y = -r * .3 + leg * r * .42; ctx.beginPath(); ctx.moveTo(side * r * .6, y); ctx.lineTo(side * r * 1.02, y + r * .12); ctx.lineTo(side * r * 1.12, y + r * .38); ctx.stroke(); }
+      ctx.beginPath(); ctx.ellipse(0, -r * .05, r * .8, r * 1.02, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#c17b47'; ctx.beginPath(); ctx.ellipse(0, -r * .12, r * .61, r * .7, 0, Math.PI, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, r * .64, r * .48, r * .35, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-r * .2, r * .45); ctx.quadraticCurveTo(-r * .58, r * .92, -r * .62, r * .7); ctx.moveTo(r * .2, r * .45); ctx.quadraticCurveTo(r * .58, r * .92, r * .62, r * .7); ctx.stroke();
+      ctx.fillStyle = '#ffd766'; ctx.beginPath(); ctx.arc(-r * .2, r * .65, r * .09, 0, Math.PI * 2); ctx.arc(r * .2, r * .65, r * .09, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#698c76'; ctx.beginPath(); ctx.moveTo(r * .7, r * .1); ctx.lineTo(r * 1.18, r * .28); ctx.lineTo(r * 1.1, r * .76); ctx.lineTo(r * .7, r * .64); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (e.kind === 'boss') {
+      ctx.fillStyle = '#30303b'; ctx.strokeStyle = outline; ctx.lineWidth = r * .09;
+      ctx.beginPath(); ctx.moveTo(-r * .48, -r * .55); ctx.lineTo(-r * 1.28, -r * 1.55); ctx.lineTo(-r * 1.18, -r * 1.72); ctx.lineTo(-r * .98, -r * 1.67); ctx.lineTo(-r * .84, -r * 1.2); ctx.lineTo(-r * .12, -r * 1.05); ctx.lineTo(0, -r * 1.92); ctx.lineTo(r * .2, -r * 1.92); ctx.lineTo(r * .24, -r * 1.1); ctx.lineTo(r * .98, -r * 1.3); ctx.lineTo(r * 1.17, -r * 1.7); ctx.lineTo(r * 1.35, -r * 1.62); ctx.lineTo(r * 1.25, -r * .95); ctx.lineTo(r * .62, -r * .48); ctx.lineTo(r * .72, r * .72); ctx.lineTo(r * .48, r * 1.5); ctx.lineTo(-r * .55, r * 1.5); ctx.lineTo(-r * .78, r * .65); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#df9c45'; ctx.beginPath(); ctx.arc(-r * 1.2, -r * 1.55, r * .2, 0, Math.PI * 2); ctx.arc(r * 1.24, -r * 1.55, r * .2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#4ad7e8'; ctx.beginPath(); ctx.arc(0, -r * 1.87, r * .2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#1a1e2a'; ctx.fillRect(-r * .42, -r * .45, r * .84, r * .55);
+      ctx.fillStyle = '#62e9f0'; ctx.fillRect(-r * .29, -r * .2, r * .18, r * .1); ctx.fillRect(r * .11, -r * .2, r * .18, r * .1);
+      ctx.fillStyle = '#403642'; ctx.fillRect(-r * .57, r * 1.05, r * .3, r * .54); ctx.fillRect(r * .27, r * 1.05, r * .3, r * .54);
     }
+    if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, r + 4, 0, Math.PI * 2); ctx.stroke(); }
     ctx.restore();
-    if(e.hp<e.max){const barWidth=e.kind==='boss'?r*2.6:r*2, barY=p.y-drawHeight*.58-7;ctx.fillStyle='#0d1014';ctx.fillRect(p.x-barWidth/2,barY,barWidth,3);ctx.fillStyle=e.kind==='boss'?'#4bdfff':'#ff6979';ctx.fillRect(p.x-barWidth/2,barY,barWidth*clamp(e.hp/e.max,0,1),3);}
+    if (e.hp < e.max) { const barWidth = e.kind === 'boss' ? r * 2.7 : r * 2, top = e.kind === 'boss' ? r * 2 : r * 1.5, barY = p.y - top - 8; ctx.fillStyle = '#0d1014'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth, 3); ctx.fillStyle = e.kind === 'boss' ? '#4bdfff' : '#ff6979'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth * clamp(e.hp / e.max, 0, 1), 3); }
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
@@ -350,12 +379,27 @@
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     for(const c of companions){const x=sx+Math.cos(c.angle)*38,y=sy+Math.sin(c.angle)*22;ctx.globalAlpha=.25;ctx.fillStyle='#bb83ff';ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#d9b8ff';ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fill();}
   }
+  function drawObjectiveArrow(target, color, headOffset) {
+    const p = screenPos(target), margin = 23, outside = p.x < margin || p.x > w - margin || p.y < margin || p.y > h - margin;
+    let x, y, angle;
+    if (outside) {
+      const dx = p.x - w / 2, dy = p.y - h / 2, sx = (w / 2 - margin) / Math.max(.001, Math.abs(dx)), sy = (h / 2 - margin) / Math.max(.001, Math.abs(dy)), scale = Math.min(sx, sy);
+      x = w / 2 + dx * scale; y = h / 2 + dy * scale; angle = Math.atan2(dy, dx);
+    } else { x = p.x; y = p.y - headOffset; angle = Math.PI / 2; }
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = .34 + Math.sin(elapsed * 2.1) * .035; ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(1, 0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(1, -3.2); ctx.lineTo(2.1, 0); ctx.lineTo(1, 3.2); ctx.closePath(); ctx.fill(); ctx.restore();
+  }
+  function drawObjectiveArrows() {
+    if (chest) drawObjectiveArrow(chest, '#f2c66c', 28);
+    const boss = enemies.find(e => e.kind === 'boss');
+    if (boss) drawObjectiveArrow(boss, '#65ddeb', boss.radius * 2 + 12);
+  }
   function render() {
     ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor();
     for(const o of xpOrbs){const p=screenPos(o);ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();}
     drawChest(); for(const item of items) drawItem(item); for(const b of bullets) drawBullet(b);
     for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
-    drawPlayer(); for(const f of floating){const p=screenPos(f);ctx.globalAlpha=clamp(f.life/.8,0,1);ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillStyle=f.color;ctx.fillText(f.text,p.x,p.y);}ctx.globalAlpha=1;
+    drawPlayer(); for(const f of floating){const p=screenPos(f);ctx.globalAlpha=clamp(f.life/.8,0,1);ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillStyle=f.color;ctx.fillText(f.text,p.x,p.y);}ctx.globalAlpha=1; drawObjectiveArrows();
   }
   function loop(t) {
     requestAnimationFrame(loop);
