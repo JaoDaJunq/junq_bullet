@@ -347,49 +347,81 @@
     if (e.hp < e.max) { const barWidth = e.kind === 'boss' ? r * 2.6 : r * 2, barY = p.y - drawHeight * .58 - 7; ctx.fillStyle = '#0d1014'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth, 3); ctx.fillStyle = e.kind === 'boss' ? '#4bdfff' : '#ff6979'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth * clamp(e.hp / e.max, 0, 1), 3); }
   }
   function drawPet(c, x, y, target, world) {
-    const colors = { quokka: '#c9824c', capybara: '#a7754d', firefly: '#e9c64f', polish: '#ed79b7', robot: '#72cbd3', raccoon: '#85818a' };
     const facing = target ? cardinalFacing(target.x - world.x, target.y - world.y) : 0;
-    const outline = '#292530', body = colors[c.type] || '#b98cff';
-    ctx.save(); ctx.translate(x, y); ctx.fillStyle = '#07101077'; ctx.beginPath(); ctx.ellipse(0, 8, 13, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.rotate(facing); ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.strokeStyle = outline;
+    const ink = '#292431', shine = '#fff5df';
+    const palette = {
+      quokka: { body: '#bd7448', shade: '#874932', light: '#edb77a', accent: '#eab64f' },
+      capybara: { body: '#a8744b', shade: '#704832', light: '#d9ae7a', accent: '#6eaa69' },
+      firefly: { body: '#ddac36', shade: '#96612b', light: '#fff0a0', accent: '#a8dadd' },
+      polish: { body: '#d95f9f', shade: '#783d67', light: '#ffaed4', accent: '#f8d9e7' },
+      robot: { body: '#76b9c0', shade: '#3b6877', light: '#d4e8d9', accent: '#f1c454' },
+      raccoon: { body: '#85808a', shade: '#4a4655', light: '#e0d7c6', accent: '#c89a59' }
+    };
+    const p = palette[c.type] || palette.robot;
+    const limb = (x1, y1, x2, y2, color = p.shade, width = 4) => { ctx.strokeStyle = ink; ctx.lineWidth = width + 1.5; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke(); };
+    const eye = (x, y, r = 1.65) => { ctx.fillStyle = '#fff1cf'; ctx.beginPath(); ctx.ellipse(x, y, r + .6, r + .9, 0, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(x, y + .35, r * .65, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(x - .25, y - .5, .7, .7); };
+    ctx.save(); ctx.translate(x, y); ctx.fillStyle = '#07101077'; ctx.beginPath(); ctx.ellipse(0, 10, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = .14; ctx.fillStyle = c.type === 'firefly' ? '#ffe775' : p.body; ctx.beginPath(); ctx.arc(0, 0, 19, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.rotate(facing); ctx.scale(1.25, 1.25); ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.lineWidth = 2.2; ctx.strokeStyle = ink;
     if (c.type === 'quokka') {
-      ctx.fillStyle = '#9c603d'; ctx.beginPath(); ctx.arc(-7, -5, 4.2, 0, Math.PI * 2); ctx.arc(7, -5, 4.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 1, 10, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#f1d6ad'; ctx.beginPath(); ctx.ellipse(0, 6, 6, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(-3.2, 0, 1.1, 0, 7); ctx.arc(3.2, 0, 1.1, 0, 7); ctx.arc(0, 4, 1.2, 0, 7); ctx.fill();
-      ctx.fillStyle = '#e7b764'; ctx.fillRect(-7, 9, 5, 3); ctx.strokeRect(-7, 9, 5, 3);
+      limb(-5, 7, -6, 12); limb(5, 7, 6, 12);
+      ctx.fillStyle = p.shade; ctx.beginPath(); ctx.arc(-6.5, -4, 4.7, 0, Math.PI * 2); ctx.arc(6.5, -4, 4.7, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.ellipse(0, 1, 10.5, 12.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.ellipse(-4.5, 1, 2, 3.1, -.4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f4d7ab'; ctx.beginPath(); ctx.ellipse(0, 6.6, 6.2, 4.8, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      eye(-3.2, 1.3, 1.25); eye(3.2, 1.3, 1.25); ctx.fillStyle = ink; ctx.beginPath(); ctx.arc(0, 5.1, 1.15, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#633c32'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-1.5, 8.2); ctx.quadraticCurveTo(0, 9.5, 1.5, 8.2); ctx.stroke();
+      limb(-8, 0, -11, 3, p.body, 2.4); ctx.fillStyle = p.accent; ctx.beginPath(); ctx.roundRect(-10, 4, 6, 5, 1.2); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff0ae'; ctx.fillRect(-8.5, 5, 2, 1);
     } else if (c.type === 'capybara') {
-      ctx.fillStyle = '#765137'; ctx.beginPath(); ctx.ellipse(0, 1, 10, 12, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 2, 8, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#d9aa78'; ctx.beginPath(); ctx.ellipse(0, 8, 6, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(-3.4, -1, 1, 0, 7); ctx.arc(3.4, -1, 1, 0, 7); ctx.arc(0, 7, 1, 0, 7); ctx.fill();
-      ctx.strokeStyle = '#e8b852'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, -5, 4, Math.PI, Math.PI * 2); ctx.lineTo(4, -2); ctx.moveTo(-4, -5); ctx.lineTo(-4, -2); ctx.stroke();
+      limb(-6, 7, -7, 12); limb(6, 7, 7, 12);
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.ellipse(0, 2, 11.2, 11.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.ellipse(-6, -5.2, 2.3, 2.8, -.25, 0, Math.PI * 2); ctx.ellipse(6, -5.2, 2.3, 2.8, .25, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.ellipse(0, 1.4, 8.8, 8.2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.ellipse(0, 6.5, 6.2, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      eye(-3.4, -.4, 1.1); eye(3.4, -.4, 1.1); ctx.fillStyle = '#40302b'; ctx.beginPath(); ctx.ellipse(0, 5, 1.5, 1, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = p.shade; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-4.5, 8); ctx.lineTo(4.5, 8); ctx.stroke();
+      ctx.fillStyle = '#598d5a'; ctx.beginPath(); ctx.ellipse(-8, 1, 3, 2, -.55, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#d89f56'; ctx.beginPath(); ctx.arc(0, -8, 2.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else if (c.type === 'firefly') {
-      ctx.fillStyle = '#d9eff0'; ctx.beginPath(); ctx.ellipse(-6, -2, 5, 3.5, -.5, 0, Math.PI * 2); ctx.ellipse(6, -2, 5, 3.5, .5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 2, 6.5, 9, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#fff19a'; ctx.beginPath(); ctx.ellipse(0, 7, 4.2, 3.6, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = outline; ctx.beginPath(); ctx.moveTo(-2, -5); ctx.quadraticCurveTo(-6, -11, -8, -8); ctx.moveTo(2, -5); ctx.quadraticCurveTo(6, -11, 8, -8); ctx.stroke();
-      ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(-2.2, -1, .9, 0, 7); ctx.arc(2.2, -1, .9, 0, 7); ctx.fill();
+      ctx.fillStyle = '#d8eeee'; ctx.beginPath(); ctx.ellipse(-8.5, -4.5, 6.5, 3.6, -.42, 0, Math.PI * 2); ctx.ellipse(8.5, -4.5, 6.5, 3.6, .42, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#a4c9cd'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-3, -4); ctx.lineTo(-12, -5); ctx.moveTo(3, -4); ctx.lineTo(12, -5); ctx.stroke();
+      ctx.fillStyle = p.shade; ctx.beginPath(); ctx.ellipse(0, 2, 7.2, 10.7, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.ellipse(0, 1, 6, 9.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f4cf5a'; ctx.beginPath(); ctx.ellipse(0, 8, 5.5, 4, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.ellipse(0, 8, 3.2, 2.3, 0, 0, Math.PI * 2); ctx.fill();
+      eye(-2.4, -2, 1.15); eye(2.4, -2, 1.15);
+      ctx.strokeStyle = ink; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-2, -7); ctx.quadraticCurveTo(-7, -13, -8, -9); ctx.moveTo(2, -7); ctx.quadraticCurveTo(7, -13, 8, -9); ctx.stroke();
     } else if (c.type === 'polish') {
-      ctx.fillStyle = '#542d4a'; ctx.fillRect(-5, -12, 10, 5); ctx.strokeRect(-5, -12, 10, 5);
-      ctx.fillStyle = body; ctx.beginPath(); ctx.roundRect(-9, -7, 18, 19, 4); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#ffd7ec'; ctx.fillRect(-6, -3, 12, 5);
-      ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(-3, 4, 1, 0, 7); ctx.arc(3, 4, 1, 0, 7); ctx.fill();
-      ctx.strokeStyle = '#f6c4df'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(13, -5); ctx.stroke(); ctx.fillStyle = '#fff0a6'; ctx.fillRect(11, -8, 3, 3);
+      limb(-6, 7, -7, 11, p.shade, 2.2); limb(6, 7, 7, 11, p.shade, 2.2);
+      ctx.fillStyle = '#603554'; ctx.beginPath(); ctx.roundRect(-6, -13, 12, 7, 1.5); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#a94782'; ctx.fillRect(-4.5, -12, 2, 4); ctx.fillRect(-1, -12, 2, 4); ctx.fillRect(2.5, -12, 2, 4);
+      ctx.fillStyle = p.shade; ctx.beginPath(); ctx.roundRect(-10, -7, 20, 19, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.roundRect(-8.5, -6, 17, 16, 3.2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.roundRect(-6, -4, 4, 11, 2); ctx.fill();
+      ctx.fillStyle = p.accent; ctx.beginPath(); ctx.roundRect(-5, 2.5, 10, 4, 1.5); ctx.fill();
+      eye(-3, -1, 1.25); eye(3, -1, 1.25);
+      ctx.strokeStyle = '#6f315d'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-2, 3); ctx.quadraticCurveTo(0, 4.3, 2, 3); ctx.stroke();
+      limb(9, 0, 13, -5, '#d6b7aa', 1.8); ctx.fillStyle = p.accent; ctx.beginPath(); ctx.arc(13.5, -6, 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else if (c.type === 'robot') {
-      ctx.fillStyle = '#557f8c'; ctx.fillRect(-3, -14, 6, 4); ctx.beginPath(); ctx.arc(0, -15, 2, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#d7e9e8'; ctx.beginPath(); ctx.roundRect(-10, -10, 20, 20, 5); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = body; ctx.beginPath(); ctx.roundRect(-7, -4, 14, 8, 3); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#19303a'; ctx.beginPath(); ctx.arc(0, 0, 2.7, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#b4f6ff'; ctx.beginPath(); ctx.arc(-.6, -.6, 1, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#c6d7d6'; ctx.fillRect(-8, 10, 5, 3); ctx.fillRect(3, 10, 5, 3); ctx.strokeRect(-8, 10, 5, 3); ctx.strokeRect(3, 10, 5, 3);
-      ctx.strokeStyle = outline; ctx.beginPath(); ctx.moveTo(-10, -2); ctx.lineTo(-13, 1); ctx.moveTo(10, -2); ctx.lineTo(13, 1); ctx.stroke();
+      ctx.strokeStyle = p.shade; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, -14); ctx.stroke(); ctx.fillStyle = p.accent; ctx.beginPath(); ctx.arc(0, -14.5, 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      limb(-8, 0, -12, 3, p.shade, 2.4); limb(8, 0, 12, 3, p.shade, 2.4); limb(-4, 8, -5, 12, p.shade, 2.4); limb(4, 8, 5, 12, p.shade, 2.4);
+      ctx.fillStyle = p.shade; ctx.beginPath(); ctx.roundRect(-10, -9, 20, 20, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.light; ctx.beginPath(); ctx.roundRect(-8, -10, 16, 18, 4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.roundRect(-7, -5, 14, 8, 3); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#143341'; ctx.beginPath(); ctx.roundRect(-5, -3.5, 10, 5, 2); ctx.fill();
+      ctx.fillStyle = '#9ff5fa'; ctx.beginPath(); ctx.arc(0, -1, 2, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillRect(-.7, -2, 1, 1);
+      ctx.fillStyle = p.accent; ctx.fillRect(-5, 5, 10, 2); ctx.fillStyle = '#eff1d1'; ctx.fillRect(-3.5, 5, 2, 1);
     } else if (c.type === 'raccoon') {
-      ctx.strokeStyle = outline; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(0, -7); ctx.quadraticCurveTo(12, -15, 9, -20); ctx.stroke();
-      ctx.strokeStyle = '#d6d1d8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(8, -16); ctx.lineTo(11, -17); ctx.stroke();
-      ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(0, 2, 9, 11, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#68616f'; ctx.beginPath(); ctx.moveTo(-8, -3); ctx.lineTo(-7, -11); ctx.lineTo(-2, -7); ctx.lineTo(0, -8); ctx.lineTo(2, -7); ctx.lineTo(7, -11); ctx.lineTo(8, -3); ctx.quadraticCurveTo(0, 1, -8, -3); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#fff0cc'; ctx.beginPath(); ctx.arc(-3, -3, 1.1, 0, 7); ctx.arc(3, -3, 1.1, 0, 7); ctx.fill();
-      ctx.fillStyle = '#c59b63'; ctx.fillRect(-8, 9, 16, 3); ctx.strokeRect(-8, 9, 16, 3);
+      ctx.strokeStyle = ink; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, 5); ctx.quadraticCurveTo(10, 5, 10, 12); ctx.stroke();
+      ctx.strokeStyle = '#c8c0c4'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(6, 7); ctx.lineTo(10, 8); ctx.moveTo(10, 11); ctx.lineTo(13, 12); ctx.stroke();
+      ctx.fillStyle = '#3a3a48'; ctx.beginPath(); ctx.roundRect(-9, 9, 18, 4, 1.4); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#c9985d'; ctx.fillRect(-7, 10, 14, 1.3); ctx.fillStyle = '#39323a'; ctx.beginPath(); ctx.arc(-6, 14, 1.5, 0, Math.PI * 2); ctx.arc(6, 14, 1.5, 0, Math.PI * 2); ctx.fill();
+      limb(-5, 7, -6, 11, p.shade, 2); limb(5, 7, 6, 11, p.shade, 2);
+      ctx.fillStyle = p.shade; ctx.beginPath(); ctx.moveTo(-8, -3); ctx.lineTo(-9, -11); ctx.lineTo(-3, -7); ctx.lineTo(3, -7); ctx.lineTo(9, -11); ctx.lineTo(8, -3); ctx.ellipse(0, 1, 9.5, 10, 0, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = p.body; ctx.beginPath(); ctx.ellipse(0, 2, 8, 9.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#393743'; ctx.beginPath(); ctx.moveTo(-8, -2); ctx.quadraticCurveTo(0, -6, 8, -2); ctx.lineTo(6, 2); ctx.quadraticCurveTo(0, -1, -6, 2); ctx.closePath(); ctx.fill();
+      eye(-3, -2, 1.3); eye(3, -2, 1.3);
+      ctx.fillStyle = '#b9a98f'; ctx.beginPath(); ctx.ellipse(0, 3.5, 3, 2, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     }
     ctx.restore();
   }
