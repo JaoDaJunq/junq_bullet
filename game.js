@@ -20,7 +20,7 @@
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
-  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao';
+  let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 25, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao', bossSpawned = false;
   let toastCount = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
@@ -29,6 +29,8 @@
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
   aliceAtlas.src = 'assets/alice-walk.png';
+  const enemySprites = {};
+  for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
   const toastSprite = new Image();
   toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
@@ -74,7 +76,7 @@
   }
   setMode('menu');
   function reset() {
-    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null;
+    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 24; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
@@ -113,12 +115,17 @@
   }
   function emit(x, y, color, count = 7, force = 1) { for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) { const a = Math.random() * Math.PI * 2, s = rand(35, 150) * force; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(.2, .55), max: .55, color, size: rand(2, 5) }); } }
   function floatText(x, y, text, color = '#fff') { floating.push({ x, y, text, color, life: .8 }); }
-  function spawnEnemy() {
+  function spawnEnemy(forcedKind = null) {
     if (enemies.length >= MAX_ENEMIES) return;
     const a = rand(0, Math.PI * 2), r = Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
     const roll = Math.random();
-    let kind = 'blob'; if (t > 30 && roll > .6) kind = 'bat'; if (t > 65 && roll > .82) kind = 'brute';
-    const stats = kind === 'brute' ? { hp: 110 + t * 1.1, speed: 31, radius: 21, damage: 22, color: '#e68b3d', xp: 4 } : kind === 'bat' ? { hp: 30 + t * .22, speed: 83, radius: 12, damage: 10, color: '#bb78ff', xp: 2 } : { hp: 46 + t * .4, speed: 48, radius: 15, damage: 12, color: '#e95d70', xp: 2 };
+    let kind = forcedKind || 'blob';
+    if (!forcedKind) { if (t > 14 && roll > .6) kind = 'bat'; if (t > 25 && roll > .79) kind = 'wolf'; if (t > 34 && roll > .91) kind = 'roach'; }
+    const stats = kind === 'boss' ? { hp: 1500 + t * 7, speed: 24, radius: 38, damage: 32, color: '#39d9ff', xp: 30 } :
+      kind === 'roach' ? { hp: 205 + t * 1.5, speed: 27, radius: 27, damage: 24, color: '#df7a33', xp: 7 } :
+      kind === 'wolf' ? { hp: 145 + t * 1.25, speed: 50, radius: 23, damage: 19, color: '#cf7750', xp: 6 } :
+      kind === 'bat' ? { hp: 34 + t * .22, speed: 88, radius: 12, damage: 10, color: '#bb78ff', xp: 2 } :
+      { hp: 46 + t * .4, speed: 48, radius: 15, damage: 12, color: '#e95d70', xp: 2 };
     enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8) });
   }
   function nearestEnemy() { let best = null, bd = Infinity; for (const e of enemies) { const d = dist2(player, e); if (d < bd) { best = e; bd = d; } } return best; }
@@ -224,6 +231,7 @@
     if (moving) { player.facing = Math.abs(ix) > Math.abs(iy) ? (ix < 0 ? 2 : 3) : (iy < 0 ? 1 : 0); player.walk += dt * 9; }
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
+    if (!bossSpawned && elapsed >= 45) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
     fireTimer -= dt; if (fireTimer <= 0) { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(nearestEnemy(), player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate; }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) fire(nearestEnemy(), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff'); companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -314,11 +322,23 @@
     ctx.rotate(Math.sin(b.phase) * .35); ctx.strokeStyle = '#aaf5ff'; ctx.lineWidth = 1.5; ctx.globalAlpha = .8; ctx.beginPath(); ctx.moveTo(-b.r * 2.5, 0); ctx.lineTo(-b.r * 1.8, -3); ctx.lineTo(-b.r * 1.2, 2); ctx.stroke();
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
-  function drawEnemy(e) { const p=screenPos(e), bob=Math.sin(e.wobble)*2, r=e.radius; ctx.save();ctx.translate(p.x,p.y+bob);const statusColor=e.poisonTimer>0?'#78ed6f':e.slowTimer>0?'#66caff':e.vulnerableTimer>0?'#ff79c8':e.color;ctx.fillStyle=e.stun>0?'#83efff':e.hit?'#fff':statusColor;
-    if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
-    else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
-    ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1); if(e.kind==='brute'){ctx.fillStyle='#ffc773';ctx.fillRect(-r*.68,-r*1.12,5,8);ctx.fillRect(r*.4,-r*1.12,5,8);} ctx.restore();
-    if(e.hp<e.max){ctx.fillStyle='#0d1014';ctx.fillRect(p.x-r,p.y-r-10,r*2,3);ctx.fillStyle='#ff6979';ctx.fillRect(p.x-r,p.y-r-10,r*2*clamp(e.hp/e.max,0,1),3);}
+  function drawEnemy(e) {
+    const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius, sprite = enemySprites[e.kind];
+    const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : e.kind === 'bat' ? 48 : 48;
+    ctx.save(); ctx.translate(p.x, p.y + bob);
+    if (sprite?.complete && sprite.naturalWidth) {
+      ctx.globalAlpha = e.hit ? .72 : 1;
+      ctx.drawImage(sprite, -size / 2, -size * .58, size, size);
+      ctx.globalAlpha = 1;
+      if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
+    } else {
+      const statusColor=e.poisonTimer>0?'#78ed6f':e.slowTimer>0?'#66caff':e.vulnerableTimer>0?'#ff79c8':e.color; ctx.fillStyle=e.stun>0?'#83efff':e.hit?'#fff':statusColor;
+      if(e.kind==='bat'){ctx.beginPath();ctx.moveTo(-r,-2);ctx.lineTo(-r*1.6,-r*.8);ctx.lineTo(-r*1.35,r*.5);ctx.lineTo(0,r*.25);ctx.lineTo(r*1.35,r*.5);ctx.lineTo(r*1.6,-r*.8);ctx.lineTo(r,-2);ctx.closePath();ctx.fill();}
+      else {ctx.beginPath();ctx.ellipse(0,0,r*1.08,r*.88,0,0,Math.PI*2);ctx.fill();ctx.fillRect(-r*.72,-r*.52,r*1.44,r*1.18);}
+      ctx.fillStyle='#17202a';ctx.fillRect(-r*.45,-r*.14,3,4);ctx.fillRect(r*.18,-r*.14,3,4);ctx.fillStyle='#fff';ctx.fillRect(-r*.38,-r*.12,1,1);
+    }
+    ctx.restore();
+    if(e.hp<e.max){const barWidth=e.kind==='boss'?r*2.6:r*2, barY=p.y-size*.58-7;ctx.fillStyle='#0d1014';ctx.fillRect(p.x-barWidth/2,barY,barWidth,3);ctx.fillStyle=e.kind==='boss'?'#4bdfff':'#ff6979';ctx.fillRect(p.x-barWidth/2,barY,barWidth*clamp(e.hp/e.max,0,1),3);}
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
