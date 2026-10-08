@@ -16,7 +16,7 @@
     hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
     options: $('upgrade-options'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
-    pickup: $('pickup-status'), pickupLabel: $('pickup-label'),
+    pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
@@ -64,6 +64,7 @@
     ui.pause.classList.toggle('hidden', next !== 'paused'); ui.over.classList.toggle('hidden', next !== 'gameover');
     ui.hud.classList.toggle('hidden', next === 'menu' || next === 'select');
     ui.joystick.classList.toggle('hidden', !mobile || next !== 'running'); ui.ult.classList.toggle('hidden', !mobile || next !== 'running');
+    ui.desktopUlt.classList.toggle('hidden', mobile || next !== 'running');
     ui.toastUse.classList.toggle('hidden', next !== 'running' || toastCount <= 0);
   }
   function selectCharacter(character) {
@@ -264,6 +265,7 @@
     ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`;
     ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills;
     ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`;
+    ui.desktopUltFill.style.width = `${clamp((1 - player.ult / player.ultMax) * 100, 0, 100)}%`; ui.desktopUltStatus.textContent = player.ult > 0 ? `${Math.ceil(player.ult)}S` : 'PRONTA'; ui.desktopUlt.classList.toggle('is-charging', player.ult > 0);
     const element = player.nailElement >= 0 ? aliceElements[player.nailElement] : null;
     ui.ultIcon.textContent = player.character === 'alice' ? '💅' : '⚡'; ui.ultLabel.textContent = player.character === 'alice' ? (element?.short || 'NAT') : 'ULT';
     ui.ult.setAttribute('aria-label', player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : 'Ultimate de choque');
@@ -434,14 +436,31 @@
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }
   }
   function drawObjectiveArrow(target, color, headOffset) {
-    const p = screenPos(target), margin = 23, outside = p.x < margin || p.x > w - margin || p.y < margin || p.y > h - margin;
+    const p = screenPos(target), margin = 31, outside = p.x < margin || p.x > w - margin || p.y < margin || p.y > h - margin;
+    const veryFar = Math.sqrt(dist2(player, target)) > Math.min(w, h) * .78;
     let x, y, angle;
     if (outside) {
       const dx = p.x - w / 2, dy = p.y - h / 2, sx = (w / 2 - margin) / Math.max(.001, Math.abs(dx)), sy = (h / 2 - margin) / Math.max(.001, Math.abs(dy)), scale = Math.min(sx, sy);
       x = w / 2 + dx * scale; y = h / 2 + dy * scale; angle = Math.atan2(dy, dx);
     } else { x = p.x; y = p.y - headOffset; angle = Math.PI / 2; }
-    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = .34 + Math.sin(elapsed * 2.1) * .035; ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(1, 0); ctx.stroke(); ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(1, -3.2); ctx.lineTo(2.1, 0); ctx.lineTo(1, 3.2); ctx.closePath(); ctx.fill(); ctx.restore();
+    const pulse = .78 + Math.sin(elapsed * 3.1) * .12;
+    ctx.save(); ctx.translate(x, y); ctx.globalAlpha = pulse;
+    if (outside && veryFar) {
+      const channels = color.match(/[\da-f]{2}/gi)?.map(v => parseInt(v, 16)) || [255, 210, 100];
+      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 36);
+      glow.addColorStop(0, `rgba(${channels[0]},${channels[1]},${channels[2]},.54)`); glow.addColorStop(.38, `rgba(${channels[0]},${channels[1]},${channels[2]},.24)`); glow.addColorStop(1, `rgba(${channels[0]},${channels[1]},${channels[2]},0)`);
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, 36, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#10161bdc'; ctx.strokeStyle = color; ctx.lineWidth = 1.7; ctx.beginPath(); ctx.roundRect(-13, -14, 26, 28, 9); ctx.fill(); ctx.stroke();
+      ctx.rotate(angle); ctx.fillStyle = color; ctx.strokeStyle = '#fff5d6'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-3, -7); ctx.lineTo(0, -1.6); ctx.lineTo(-7, 0); ctx.lineTo(0, 1.6); ctx.lineTo(-3, 7); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else if (outside) {
+      ctx.fillStyle = '#10161bf0'; ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.rotate(angle); ctx.fillStyle = color; ctx.strokeStyle = '#fff5d6'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-3, -7); ctx.lineTo(0, -1.5); ctx.lineTo(-7, 0); ctx.lineTo(0, 1.5); ctx.lineTo(-3, 7); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.translate(0, -7); ctx.fillStyle = '#11171ddd'; ctx.strokeStyle = color; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.roundRect(-11, -13, 22, 23, 8); ctx.fill(); ctx.stroke();
+      ctx.rotate(angle); ctx.fillStyle = color; ctx.strokeStyle = '#fff5d6'; ctx.lineWidth = .9; ctx.beginPath(); ctx.moveTo(7, 0); ctx.lineTo(-2, -5.5); ctx.lineTo(0, -1.2); ctx.lineTo(-5, 0); ctx.lineTo(0, 1.2); ctx.lineTo(-2, 5.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
   }
   function drawObjectiveArrows() {
     if (chest) drawObjectiveArrow(chest, '#f2c66c', 28);
