@@ -176,7 +176,7 @@
     if (!target) return;
     const dx = target.x - origin.x, dy = target.y - origin.y, len = Math.hypot(dx, dy) || 1;
     const aim = Math.atan2(dy, dx);
-    for (let i = 0; i < count; i++) { const angle = aim + (i - (count - 1) / 2) * .12; bullets.push({ x: origin.x, y: origin.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, life: 1.5, color, element, scratch, r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce, hitEnemies: new Set() }); }
+    for (let i = 0; i < count; i++) { const angle = aim + (i - (count - 1) / 2) * .12; bullets.push({ x: origin.x, y: origin.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage, life: 1.5, color, element, scratch, basic: origin === player, r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce, hitEnemies: new Set() }); }
     if (color === '#54dcff' || scratch) { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(origin.x + dx / len * 14, origin.y + dy / len * 14, color === '#54dcff' ? '#c9f8ff' : color, 4, .45); sound(680, .045, 'triangle', .018);
   }
@@ -190,8 +190,8 @@
       const len = Math.hypot(player.vx, player.vy); aimX = player.vx / len; aimY = player.vy / len;
       player.aimX = aimX; player.aimY = aimY;
     }
-    const center = Math.atan2(aimY, aimX), count = options.count || Math.min(13, 5 + (player.multishot - 1) * 2), spread = options.spread ?? .88;
-    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .8);
+    const center = Math.atan2(aimY, aimX), count = options.count ?? 3, spread = options.spread ?? .88;
+    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .55);
     for (let i = 0; i < count; i++) {
       const angle = center + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
       const cardColor = options.ultimate ? (i % 2 ? '#ffd16b' : '#fff0ce') : (i % 2 ? '#f25566' : '#f4ead0');
@@ -216,7 +216,7 @@
     }
     if (player.character === 'gui') {
       const target = nearestEnemy();
-      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1.55, life: 1.4, pierce: 99, stun: .9, ultimate: true });
+      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1, life: 1.4, pierce: 99, stun: .9, ultimate: true });
       const angle = Math.atan2(player.aimY, player.aimX); startUltimateCooldown();
       ultimateVfx = { x: player.x, y: player.y, radius: 330, spread: 1.92, angle, life: .62, max: .62, targets: [], color: '#ffd16b', type: 'cardFan' };
       emit(player.x, player.y, '#ffd16b', 28, 1.5); floatText(player.x, player.y - 46, 'MÃO DE TRUNFO!', '#ffe39a');
@@ -246,7 +246,25 @@
     else if (element.id === 'lifesteal') player.hp = Math.min(player.maxHp, player.hp + damage * Math.min(.55, .22 * player.nailPower));
     else if (element.id === 'charm') enemy.vulnerableTimer = Math.max(enemy.vulnerableTimer || 0, 4 * player.nailPower);
   }
-  function defeat(e) { kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function defeat(e) { if (e.defeated) return; e.defeated = true; kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function chainShock(first, baseDamage) {
+    const linked = [first], targets = [];
+    let current = first;
+    for (let hop = 1; hop < 3; hop++) {
+      const next = enemies.filter(e => e.hp > 0 && !linked.includes(e) && dist2(current, e) <= 125 * 125)
+        .sort((a, b) => dist2(current, a) - dist2(current, b))[0];
+      if (!next) break;
+      linked.push(next);
+      const damage = baseDamage * (hop === 1 ? .7 : .5) * (next.vulnerableTimer > 0 ? 1.25 : 1);
+      next.hp -= damage; next.hit = .18; next.stun = Math.max(next.stun || 0, .22);
+      emit(next.x, next.y, '#6ceaff', 5, .52);
+      floatText(next.x, next.y - next.radius - 5, `⚡ ${Math.round(damage)}`, '#a4f4ff');
+      targets.push({ x: next.x, y: next.y, phase: rand(0, 6.28) });
+      if (next.hp <= 0) defeat(next);
+      current = next;
+    }
+    if (targets.length) ultimateVfx = { x: first.x, y: first.y, radius: 0, life: .24, max: .24, targets, color: '#55dcff', type: 'chain' };
+  }
   function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
     { id: 'rapid', rarity: 'rare', icon: '⚡', category: 'COMBATE', title: 'Gatilho rápido', desc: 'Atira 18% mais rápido.', apply: () => player.fireRate = Math.max(.16, player.fireRate * .82) },
@@ -342,7 +360,26 @@
       const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
       if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); } }
     }
-    for (let i = bullets.length - 1; i >= 0; i--) { const b = bullets[i]; if (!b.card) { b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); } b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt; let gone = b.life <= 0; for (let j = enemies.length - 1; j >= 0 && !gone; j--) { const e = enemies[j]; if (b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue; b.hitEnemies.add(e); const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable; e.hp -= damage; e.hit = .12; if (b.stun) { e.stun = Math.max(e.stun || 0, b.stun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); } applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62); floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : b.card ? '#ffe4a1' : '#bdf4ff'); if (b.pierce > 0) b.pierce--; else gone = true; if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); } } if (gone) bullets.splice(i, 1); }
+    for (let i = bullets.length - 1; i >= 0; i--) {
+      const b = bullets[i];
+      if (!b.card) { b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); }
+      b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt;
+      let gone = b.life <= 0;
+      for (let j = enemies.length - 1; j >= 0 && !gone; j--) {
+        const e = enemies[j];
+        if (e.hp <= 0 || b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue;
+        b.hitEnemies.add(e);
+        const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable;
+        e.hp -= damage; e.hit = .12;
+        if (b.stun) { e.stun = Math.max(e.stun || 0, b.stun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); }
+        applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62);
+        floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : b.card ? '#ffe4a1' : '#bdf4ff');
+        if (b.basic && player.character === 'jao' && !b.chainTriggered) { b.chainTriggered = true; chainShock(e, damage); }
+        if (b.pierce > 0) b.pierce--; else gone = true;
+        if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); }
+      }
+      if (gone) bullets.splice(i, 1);
+    }
     for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value * (doubleXpOrbs > 0 ? 2 : 1)); if (doubleXpOrbs > 0) doubleXpOrbs--; emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     if (!chest) { chestTimer -= dt; if (chestTimer <= 0) { spawnChest(); chestTimer = 80; } }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
@@ -413,6 +450,23 @@
     const v = ultimateVfx, p = screenPos(v), progress = 1 - v.life / v.max, fade = clamp(v.life / .38, 0, 1), radius = v.radius * Math.min(1, progress * 1.65);
     ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
     const effectColor = v.color || '#42dfff';
+    if (v.type === 'chain') {
+      ctx.globalAlpha = fade * .95;
+      let from = p;
+      for (const target of v.targets) {
+        const q = screenPos(target), dx = q.x - from.x, dy = q.y - from.y, len = Math.hypot(dx, dy) || 1;
+        const reach = Math.min(1, progress * 5), endX = from.x + dx * reach, endY = from.y + dy * reach;
+        ctx.strokeStyle = '#bdf8ff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(from.x, from.y);
+        for (let s = 1; s < 4; s++) {
+          const t = s / 4, offset = Math.sin(target.phase + s * 8 + progress * 45) * Math.min(8, len * .09);
+          ctx.lineTo(from.x + dx * t - dy / len * offset, from.y + dy * t + dx / len * offset);
+        }
+        ctx.lineTo(endX, endY); ctx.stroke();
+        ctx.fillStyle = '#e8ffff'; ctx.beginPath(); ctx.arc(endX, endY, 2.5 + Math.sin(progress * 28 + target.phase), 0, Math.PI * 2); ctx.fill();
+        from = q;
+      }
+      ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; return;
+    }
     if (v.type === 'cardFan') {
       ctx.translate(p.x, p.y); ctx.rotate(v.angle); ctx.globalAlpha = fade * .2;
       ctx.fillStyle = '#ffc95f'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, Math.max(8, v.radius * progress), -v.spread / 2, v.spread / 2); ctx.closePath(); ctx.fill();
