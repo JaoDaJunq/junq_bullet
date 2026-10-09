@@ -54,7 +54,7 @@
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
   let jaoTrailTimer = 0;
-  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
@@ -113,7 +113,7 @@
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
@@ -136,7 +136,7 @@
     else if ((key === 'p' || key === 'escape') && state === 'paused') setMode('running');
     if (key === ' ' && state === 'running') castUltimate();
     if (key === 'f' && state === 'running') useToast();
-    if (state === 'upgrade' && ['1','2','3'].includes(key)) chooseUpgrade(Number(key) - 1);
+    if (state === 'upgrade' && ['1','2','3','4'].includes(key) && Number(key) <= currentChoices.length) chooseUpgrade(Number(key) - 1);
   });
   addEventListener('keyup', (e) => keys.delete(e.key.toLowerCase()));
 
@@ -232,10 +232,10 @@
     emit(player.x, player.y, '#b9f7ff', 32, 2.2); sound(170, .32, 'sawtooth', .045);
     for (const e of enemies) {
       if (dist2(player, e) >= radius2) continue;
-      e.hp -= player.damage * 1.1 * player.ultDamage * (e.vulnerableTimer > 0 ? 1.25 : 1);
+      e.hp -= player.damage * 1.1 * player.ultDamage * vulnerabilityMultiplier(e);
       e.hit = .3;
       emit(e.x, e.y, '#c5faff', chainSet.has(e) ? 7 : 2, .8);
-      if (chainSet.has(e)) { e.hp -= player.damage * 1.5 * player.ultDamage * (e.vulnerableTimer > 0 ? 1.25 : 1); e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
+      if (chainSet.has(e)) { e.hp -= player.damage * 1.5 * player.ultDamage * vulnerabilityMultiplier(e); e.stun = 1.2; floatText(e.x, e.y - 20, '⚡ STUN', '#89edff'); }
       if (e.hp <= 0) defeat(e);
     }
     for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) enemies.splice(i, 1);
@@ -243,12 +243,50 @@
   }
   function applyNailEffect(enemy, element, damage) {
     if (!element) return;
-    if (element.id === 'poison') { enemy.poisonTimer = 4 * player.nailPower; enemy.poisonDps = Math.max(enemy.poisonDps || 0, player.damage * .22 * player.nailPower); }
-    else if (element.id === 'slow') enemy.slowTimer = Math.max(enemy.slowTimer || 0, 2.4 * player.nailPower);
-    else if (element.id === 'lifesteal') player.hp = Math.min(player.maxHp, player.hp + damage * Math.min(.55, .22 * player.nailPower));
-    else if (element.id === 'charm') enemy.vulnerableTimer = Math.max(enemy.vulnerableTimer || 0, 4 * player.nailPower);
+    if (element.id === 'poison') {
+      enemy.poisonTimer = Math.max(enemy.poisonTimer || 0, 4 * player.nailPower);
+      enemy.poisonDps = Math.max(enemy.poisonDps || 0, player.damage * .22 * player.nailPower * player.alicePoisonDpsBonus);
+      if (player.alicePoisonSlow > 0) enemy.slowTimer = Math.max(enemy.slowTimer || 0, player.alicePoisonSlow);
+      if (player.character === 'alice' && player.aliceEvolutionPath === 'poison' && player.alicePoisonSpread > 0) {
+        const spreadTargets = enemies.filter(other => other !== enemy && other.hp > 0 && dist2(enemy, other) <= player.alicePoisonRadius ** 2)
+          .sort((a, b) => dist2(enemy, a) - dist2(enemy, b)).slice(0, 4);
+        for (const other of spreadTargets) {
+          other.poisonTimer = Math.max(other.poisonTimer || 0, 4 * player.nailPower);
+          other.poisonDps = Math.max(other.poisonDps || 0, player.damage * .22 * player.nailPower * player.alicePoisonDpsBonus * player.alicePoisonSpread);
+          if (player.alicePoisonSlow > 0) other.slowTimer = Math.max(other.slowTimer || 0, player.alicePoisonSlow);
+          emit(other.x, other.y, '#8cef78', 1, .28);
+        }
+      }
+    } else if (element.id === 'slow') {
+      const duration = 2.4 * player.nailPower * player.aliceSlowDuration;
+      enemy.slowTimer = Math.max(enemy.slowTimer || 0, duration);
+      if (player.aliceSlowStun > 0) enemy.stun = Math.max(enemy.stun || 0, player.aliceSlowStun);
+      if (player.character === 'alice' && player.aliceEvolutionPath === 'slow' && player.aliceSlowSplash > 0) {
+        const splashTargets = enemies.filter(other => other !== enemy && other.hp > 0 && dist2(enemy, other) <= player.aliceSlowRadius ** 2)
+          .sort((a, b) => dist2(enemy, a) - dist2(enemy, b)).slice(0, 4);
+        for (const other of splashTargets) {
+          other.slowTimer = Math.max(other.slowTimer || 0, duration);
+          other.hp -= player.damage * player.aliceSlowSplash; other.hit = .12;
+          if (other.hp <= 0) defeat(other);
+          if (player.aliceSlowStun > 0) other.stun = Math.max(other.stun || 0, player.aliceSlowStun);
+          emit(other.x, other.y, '#77ccff', 2, .32);
+        }
+      }
+    } else if (element.id === 'lifesteal') {
+      enemy.aliceLifestealMark = true;
+      player.hp = Math.min(player.maxHp, player.hp + damage * Math.min(.65, .22 * player.nailPower + player.aliceLifeStealBonus));
+    } else if (element.id === 'charm') {
+      const duration = 4 * player.nailPower * player.aliceCharmTime;
+      enemy.vulnerableTimer = Math.max(enemy.vulnerableTimer || 0, duration); enemy.aliceCharmMark = true;
+      if (player.character === 'alice' && player.aliceEvolutionPath === 'charm' && player.aliceCharmSpread > 0) {
+        const charmTargets = enemies.filter(other => other !== enemy && other.hp > 0 && dist2(enemy, other) <= player.aliceCharmSpread ** 2)
+          .sort((a, b) => dist2(enemy, a) - dist2(enemy, b)).slice(0, 4);
+        for (const other of charmTargets) { other.vulnerableTimer = Math.max(other.vulnerableTimer || 0, 2 * player.nailPower); other.aliceCharmMark = true; }
+      }
+    }
   }
-  function defeat(e) { if (e.defeated) return; e.defeated = true; kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function defeat(e) { if (e.defeated) return; e.defeated = true; if (player.character === 'alice' && player.aliceEvolutionPath === 'lifesteal' && e.aliceLifestealMark && player.aliceKillHeal > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.aliceKillHeal); kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function vulnerabilityMultiplier(enemy) { return enemy.vulnerableTimer > 0 ? (player.character === 'alice' && player.aliceEvolutionPath === 'charm' ? player.aliceCharmMultiplier : 1.25) : 1; }
   function chainShock(first, baseDamage) {
     const linked = [first], targets = [];
     let current = first;
@@ -257,7 +295,7 @@
         .sort((a, b) => dist2(current, a) - dist2(current, b))[0];
       if (!next) break;
       linked.push(next);
-      const damage = baseDamage * (hop === 1 ? .7 : .5) * player.jaoChainDamage * (next.vulnerableTimer > 0 ? 1.25 : 1);
+      const damage = baseDamage * (hop === 1 ? .7 : .5) * player.jaoChainDamage * vulnerabilityMultiplier(next);
       next.hp -= damage; next.hit = .18; next.stun = Math.max(next.stun || 0, player.jaoChainStun);
       emit(next.x, next.y, '#6ceaff', 5, .52);
       floatText(next.x, next.y - next.radius - 5, `⚡ ${Math.round(damage)}`, '#a4f4ff');
@@ -314,6 +352,49 @@
     };
     return branches[player.jaoEvolutionPath] || [];
   }
+  function aliceEvolutionChoices(tier) {
+    const choice = (id, icon, title, desc, color, apply) => ({ id, icon, title, desc, color, rarity: 'legendary', category: `EVOLUÇÃO ${tier === 16 ? 'I' : 'II'}`, evolution: tier, apply });
+    if (tier === 16) return [
+      choice('poison', '☠', 'Jardim Tóxico', 'O esmalte verde espalha veneno para até quatro inimigos próximos.', '#80e36e', () => {
+        player.aliceEvolutionPath = 'poison'; player.aliceEvolution = 1; player.alicePoisonSpread = .55;
+      }),
+      choice('slow', '❄', 'Esmalte Glacial', 'O azul desacelera por mais tempo e o arranhão espalha uma onda de frio.', '#68cfff', () => {
+        player.aliceEvolutionPath = 'slow'; player.aliceEvolution = 1; player.aliceSlowDuration = 1.3; player.aliceSlowSplash = .12; player.aliceSlowRadius = 95;
+      }),
+      choice('lifesteal', '♥', 'Vermelho Vampírico', 'O vermelho rouba mais vida e marca inimigos para recuperar vida ao derrotá-los.', '#ff637a', () => {
+        player.aliceEvolutionPath = 'lifesteal'; player.aliceEvolution = 1; player.aliceLifeStealBonus = .12;
+      }),
+      choice('charm', '✿', 'Rosa Hipnótico', 'O rosa marca alvos por mais tempo e aumenta o dano que eles recebem.', '#ff82ce', () => {
+        player.aliceEvolutionPath = 'charm'; player.aliceEvolution = 1; player.aliceCharmTime = 1.25; player.aliceCharmMultiplier = 1.45;
+      })
+    ];
+    const finish = (id, icon, title, desc, color, apply) => choice(id, icon, title, desc, color, () => {
+      apply(); player.aliceEvolution = 2; player.aliceEvolutionFinal = id;
+    });
+    const branches = {
+      poison: [
+        finish('green-tide', '☠', 'Maré Verde', 'O contágio alcança uma área maior e espalha veneno mais potente.', '#80e36e', () => { player.alicePoisonRadius += 65; player.alicePoisonSpread += .2; }),
+        finish('caustic-claws', '✦', 'Garras Cáusticas', 'Seu veneno causa 45% mais dano ao longo do tempo.', '#a9f28b', () => { player.alicePoisonDpsBonus += .45; }),
+        finish('noxious-mist', '♧', 'Névoa Nociva', 'Inimigos envenenados também ficam lentos por mais de um segundo.', '#72dba0', () => { player.alicePoisonSlow = 1.25; })
+      ],
+      slow: [
+        finish('ice-shards', '❄', 'Estilhaço Gélido', 'A onda azul fica maior e seus estilhaços causam dano extra.', '#68cfff', () => { player.aliceSlowRadius += 30; player.aliceSlowSplash += .14; }),
+        finish('deep-freeze', '✧', 'Geada Profunda', 'A lentidão dura mais e o arranhão congela os alvos por um instante.', '#9ceaff', () => { player.aliceSlowDuration += .65; player.aliceSlowStun = .22; }),
+        finish('brittle-point', '◇', 'Ponto de Ruptura', 'Alvos lentos recebem 30% mais dano dos ataques da Alice.', '#7ab9ff', () => { player.aliceSlowDamageBonus = 1.3; })
+      ],
+      lifesteal: [
+        finish('deep-siphon', '♥', 'Sifão Profundo', 'O esmalte vermelho rouba ainda mais vida a cada arranhão.', '#ff637a', () => { player.aliceLifeStealBonus += .16; }),
+        finish('blood-banquet', '♨', 'Banquete Carmesim', 'Derrotar um alvo marcado recupera 4% da vida máxima.', '#ff8b8b', () => { player.aliceKillHeal = .04; }),
+        finish('red-velocity', '➤', 'Velocidade Rubra', 'Roubar vida também deixa a Alice 10% mais rápida.', '#ff536c', () => { player.speed *= 1.1; player.aliceLifeStealBonus += .06; })
+      ],
+      charm: [
+        finish('fatal-fascination', '✿', 'Fascínio Fatal', 'Alvos rosa recebem ainda mais dano de todos os ataques.', '#ff82ce', () => { player.aliceCharmMultiplier = 1.7; }),
+        finish('lasting-mark', '♡', 'Marca Duradoura', 'A vulnerabilidade do esmalte rosa dura mais que o dobro.', '#ffa5dd', () => { player.aliceCharmTime = 2.25; }),
+        finish('charm-wave', '❀', 'Encanto em Cadeia', 'O rosa também marca até quatro inimigos ao redor do alvo atingido.', '#f775c3', () => { player.aliceCharmSpread = 120; })
+      ]
+    };
+    return branches[player.aliceEvolutionPath] || [];
+  }
   function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
     { id: 'rapid', rarity: 'rare', icon: '⚡', category: 'COMBATE', title: 'Gatilho rápido', desc: 'Atira 18% mais rápido.', apply: () => player.fireRate = Math.max(.16, player.fireRate * .82) },
@@ -338,15 +419,22 @@
   function rollRarity(available) { const pool = Object.entries(rarityChances).filter(([rarity]) => available.has(rarity)); const total = pool.reduce((sum, [, weight]) => sum + weight, 0); let roll = Math.random() * total; for (const [rarity, weight] of pool) { roll -= weight; if (roll < 0) return rarity; } return pool[pool.length - 1][0]; }
   function makeUpgradeOptions() {
     const evolutionLevel = player.character === 'jao' && player.level === 16 && player.jaoEvolution === 0 ? 16 :
-      player.character === 'jao' && player.level === 36 && player.jaoEvolution === 1 ? 36 : 0;
-    currentChoices = evolutionLevel ? jaoEvolutionChoices(evolutionLevel) : [];
+      player.character === 'jao' && player.level === 36 && player.jaoEvolution === 1 ? 36 :
+      player.character === 'alice' && player.level === 16 && player.aliceEvolution === 0 ? 16 :
+      player.character === 'alice' && player.level === 36 && player.aliceEvolution === 1 ? 36 : 0;
+    const isAlice = player.character === 'alice';
+    currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
+    ui.options.classList.toggle('evolution-four', isAlice && evolutionLevel === 16);
     if (evolutionLevel) {
-      const pathNames = { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
-      ui.upgradeEyebrow.textContent = evolutionLevel === 16 ? 'NÍVEL 16 · EVOLUÇÃO DO JÃO' : `NÍVEL 36 · ${pathNames[player.jaoEvolutionPath] || 'FORMA FINAL'}`;
-      ui.upgradeTitle.textContent = evolutionLevel === 16 ? 'Escolhe teu caminho elétrico.' : 'Desperta a forma final.';
-      ui.upgradeHint.innerHTML = evolutionLevel === 16
-        ? 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do Jão.'
-        : 'Escolhe como evoluir o caminho que tu abriu no nível 16. Cada rota tem uma forma final.';
+      const pathNames = isAlice
+        ? { poison: 'JARDIM TÓXICO', slow: 'ESMALTE GLACIAL', lifesteal: 'VERMELHO VAMPÍRICO', charm: 'ROSA HIPNÓTICO' }
+        : { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
+      const selectedPath = isAlice ? player.aliceEvolutionPath : player.jaoEvolutionPath;
+      ui.upgradeEyebrow.textContent = evolutionLevel === 16 ? `NÍVEL 16 · EVOLUÇÃO ${isAlice ? 'DA ALICE' : 'DO JÃO'}` : `NÍVEL 36 · ${pathNames[selectedPath] || 'FORMA FINAL'}`;
+      ui.upgradeTitle.textContent = evolutionLevel === 16 ? (isAlice ? 'Escolhe teu esmalte supremo.' : 'Escolhe teu caminho elétrico.') : 'Desperta a forma final.';
+      ui.upgradeHint.textContent = evolutionLevel === 16
+        ? (isAlice ? 'Escolhe uma cor para evoluir. O esmalte reforça uma habilidade e muda o visual da Alice.' : 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do Jão.')
+        : `Escolhe como evoluir o caminho que tu abriu no nível 16. ${isAlice ? 'O esmalte escolhido define as três opções.' : 'Cada rota tem uma forma final.'}`;
     } else {
       const remaining = [...upgrades];
       while (currentChoices.length < 3 && remaining.length) {
@@ -368,7 +456,7 @@
       b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
     });
   }
-  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `Jão evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
+  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   const chestDrops = [
     { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
@@ -461,7 +549,9 @@
         const e = enemies[j];
         if (e.hp <= 0 || b.hitEnemies.has(e) || dist2(b, e) >= (e.radius + b.r) ** 2) continue;
         b.hitEnemies.add(e);
-        const critical = Math.random() < player.critChance, vulnerable = e.vulnerableTimer > 0 ? 1.25 : 1, damage = b.damage * (critical ? 2 : 1) * vulnerable;
+        const critical = Math.random() < player.critChance, vulnerable = vulnerabilityMultiplier(e);
+        const slowBonus = player.character === 'alice' && player.aliceEvolutionPath === 'slow' && e.slowTimer > 0 ? player.aliceSlowDamageBonus : 1;
+        const damage = b.damage * (critical ? 2 : 1) * vulnerable * slowBonus;
         e.hp -= damage; e.hit = .12;
         if (b.stun) { e.stun = Math.max(e.stun || 0, b.stun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); }
         applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62);
@@ -744,6 +834,24 @@
     if (stage === 2) { ctx.globalAlpha = .72; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 29, 31, 49, 0, -1.9, .9); ctx.stroke(); bolt(x - 27, y - 20, 1, 1.1); bolt(x + 27, y - 20, -1, 1.1); }
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  function drawAliceEvolution(x, y) {
+    const stage = player.aliceEvolution;
+    const colors = { poison: '#82e978', slow: '#6dd4ff', lifesteal: '#ff637a', charm: '#ff82ce' };
+    const color = colors[player.aliceEvolutionPath] || '#ff82ce';
+    const pulse = .72 + Math.sin(elapsed * (stage === 2 ? 5.2 : 3.6)) * .12;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
+    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.2 : 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y - 27, 24 + stage * 3, 37 + stage * 4, 0, -.15, Math.PI * 1.72); ctx.stroke();
+    ctx.globalAlpha *= .8; ctx.strokeStyle = '#fff1fa'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x - 8, y - 39); ctx.lineTo(x - 3, y - 45); ctx.lineTo(x + 2, y - 39); ctx.lineTo(x + 8, y - 45); ctx.stroke();
+    for (let i = 0; i < stage + 1; i++) {
+      const a = elapsed * (stage === 2 ? .8 : .5) + i * Math.PI * 2 / (stage + 1);
+      const sx = x + Math.cos(a) * (26 + stage * 4), sy = y - 29 + Math.sin(a) * (18 + stage * 3);
+      ctx.fillStyle = color; ctx.globalAlpha = pulse * .8; ctx.beginPath(); ctx.arc(sx, sy, stage === 2 ? 2.4 : 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+    if (stage === 2) { ctx.globalAlpha = .62; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 28, 33, 48, 0, 1.2, 4.9); ctx.stroke(); }
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
@@ -751,6 +859,7 @@
     else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
     if (player.character === 'jao' && player.jaoEvolution > 0) drawJaoEvolution(sx, sy);
+    if (player.character === 'alice' && player.aliceEvolution > 0) drawAliceEvolution(sx, sy);
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }
   }

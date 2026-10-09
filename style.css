@@ -84,3 +84,9 @@
 .desktop-ultimate.gui-ultimate .desktop-ultimate-icon{border-color:#ffe09a;background:linear-gradient(145deg,#a8661e,#923e3e)}
 .desktop-ultimate.gui-ultimate .desktop-ultimate-meter i{background:linear-gradient(90deg,#e18b36,#ffe08a)}
 @media(max-width:560px){.character-grid{grid-template-columns:1fr}.character-panel{padding:20px 14px}.character-description{min-height:0}}
+
+/* Alice's level-16 color evolution presents four choices at once. */
+.cards.evolution-four{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.evolution-four .upgrade-card{min-height:218px;padding:16px 13px}
+.evolution-four .upgrade-card p{font-size:11px}
+@media(max-width:650px){.cards.evolution-four{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.evolution-four .upgrade-card{min-height:184px;padding:11px 9px}.evolution-four .upgrade-card p{font-size:10px}}
