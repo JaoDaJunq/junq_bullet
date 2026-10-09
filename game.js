@@ -1102,8 +1102,13 @@
     ctx.restore();
   }
   function drawCaetanoOrientedFrame(image, col, facing, cell, rowH, size, sx, footY) {
-    const sourceRow = facing;
-    ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, sx - size / 2, footY - size, size, size);
+    if (facing === 3) {
+      ctx.save(); ctx.translate(sx, 0); ctx.scale(-1, 1);
+      ctx.drawImage(image, col * cell, 2 * rowH, cell, rowH, -size / 2, footY - size, size, size);
+      ctx.restore();
+      return;
+    }
+    ctx.drawImage(image, col * cell, facing * rowH, cell, rowH, sx - size / 2, footY - size, size, size);
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
