@@ -228,13 +228,13 @@
   function resolveBossAttack(boss) {
     if (boss.bossAttackType === 'slam') {
       ultimateVfx = { x: boss.x, y: boss.y, radius: boss.bossAttackRadius, life: .34, max: .34, targets: [], color: '#ff596f', type: 'bossImpact' };
-      if (dist2(player, boss) <= (boss.bossAttackRadius + 12) ** 2) { floatText(player.x, player.y - 32, 'IMPACTO!', '#ff8290'); damagePlayer(25); }
+      if (dist2(player, boss) <= (boss.bossAttackRadius + 12) ** 2) { floatText(player.x, player.y - 32, 'IMPACTO!', '#ff8290'); damagePlayer(25 * (boss.attackDebuffTimer > 0 ? .62 : 1)); }
     } else {
       const a = { x: boss.x, y: boss.y }, b = { x: boss.bossAimX, y: boss.bossAimY }, abx = b.x - a.x, aby = b.y - a.y;
       const t = clamp(((player.x - a.x) * abx + (player.y - a.y) * aby) / (abx * abx + aby * aby || 1), 0, 1);
       const dx = player.x - (a.x + t * abx), dy = player.y - (a.y + t * aby);
       ultimateVfx = { x: boss.x, y: boss.y, radius: 0, life: .28, max: .28, targets: [{ x: boss.bossAimX, y: boss.bossAimY, phase: 0 }], color: '#ff596f', type: 'chain' };
-      if (dx * dx + dy * dy <= 36 ** 2 && t > .04) { floatText(player.x, player.y - 32, 'RAIO!', '#ff8290'); damagePlayer(22); }
+      if (dx * dx + dy * dy <= 36 ** 2 && t > .04) { floatText(player.x, player.y - 32, 'RAIO!', '#ff8290'); damagePlayer(22 * (boss.attackDebuffTimer > 0 ? .62 : 1)); }
     }
     emit(boss.x, boss.y, '#ff6478', 16, 1.2); sound(105, .28, 'sawtooth', .05);
   }
