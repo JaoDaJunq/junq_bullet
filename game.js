@@ -1103,7 +1103,7 @@
   }
   function drawCaetanoOrientedFrame(image, col, facing, cell, rowH, size, sx, footY) {
     const sourceRow = facing === 3 ? 2 : facing;
-    if (facing === 3) { ctx.save(); ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, size / 2, footY - size, size, size); ctx.restore(); }
+    if (facing === 3) { ctx.save(); ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, -size / 2, footY - size, size, size); ctx.restore(); }
     else ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, sx - size / 2, footY - size, size, size);
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
