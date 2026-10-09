@@ -43,13 +43,14 @@
   const ui = {
     hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
-    options: $('upgrade-options'), upgradeEyebrow: $('upgrade-eyebrow'), upgradeTitle: $('upgrade-title'), upgradeHint: $('upgrade-hint'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
+    options: $('upgrade-options'), upgradeEyebrow: $('upgrade-eyebrow'), upgradeTitle: $('upgrade-title'), upgradeHint: $('upgrade-hint'), joystickPosition: $('joystick-position'), joystickPositionLabel: $('joystick-position-label'), joystickSize: $('joystick-size'), joystickSizeLabel: $('joystick-size-label'), handednessToggle: $('handedness-toggle'), autoUltimateToggle: $('auto-ultimate-toggle'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
     pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltIcon: $('desktop-ultimate-icon'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
   let w = innerWidth, h = innerHeight, dpr = 1, state = 'menu', last = 0, toastTimer = 0, needsRender = true;
   let elapsed = 0, kills = 0, spawnTimer = 0, fireTimer = 0, companionTimer = 0, chestTimer = 55, chest = null, chestProgress = 0, ultimateVfx = null, selectedCharacter = 'jao', bossSpawned = false;
   let toastCount = 0;
+  let runStats = { xp: 0, chests: 0, ultimates: 0, upgrades: 0, evolutions: [], bossDefeated: false };
   let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
@@ -86,6 +87,26 @@
   addEventListener('resize', resize); resize();
   const mobile = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   const frameInterval = mobile ? 1000 / 30 : 1000 / 60;
+  const controlSettings = { size: 116, position: 24, side: 'left', autoUltimate: false };
+  try {
+    const saved = JSON.parse(localStorage.getItem('junqBulletControls') || '{}');
+    controlSettings.size = clamp(Number(saved.size) || 116, 96, 148);
+    controlSettings.position = clamp(Number(saved.position) || 24, 12, 38);
+    controlSettings.side = saved.side === 'right' ? 'right' : 'left';
+    controlSettings.autoUltimate = saved.autoUltimate === true;
+  } catch (_) {}
+  function applyControlSettings(save = false) {
+    document.documentElement.style.setProperty('--joystick-size', `${controlSettings.size}px`);
+    document.documentElement.style.setProperty('--joystick-position', `${controlSettings.position}vw`);
+    document.body.classList.toggle('controls-right', controlSettings.side === 'right');
+    ui.joystickPosition.value = controlSettings.position; ui.joystickPositionLabel.textContent = `${controlSettings.position}%`;
+    ui.joystickSize.value = controlSettings.size; ui.joystickSizeLabel.textContent = `${controlSettings.size} px`;
+    ui.handednessToggle.textContent = `Joystick: lado ${controlSettings.side === 'left' ? 'esquerdo' : 'direito'}`;
+    ui.autoUltimateToggle.textContent = `Ultimate automática: ${controlSettings.autoUltimate ? 'ligada' : 'desligada'}`;
+    ui.autoUltimateToggle.setAttribute('aria-pressed', String(controlSettings.autoUltimate));
+    if (save) { try { localStorage.setItem('junqBulletControls', JSON.stringify(controlSettings)); } catch (_) {} }
+  }
+  applyControlSettings();
 
   function showToast(text) { ui.toast.textContent = text; ui.toast.classList.remove('hidden'); toastTimer = 2.3; }
   function setMode(next) {
@@ -110,7 +131,7 @@
   }
   setMode('menu');
   function reset() {
-    elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
+    elapsed = 0; kills = 0; runStats = { xp: 0, chests: 0, ultimates: 0, upgrades: 0, evolutions: [], bossDefeated: false }; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
     Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
@@ -126,6 +147,10 @@
   $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
+  ui.joystickPosition.addEventListener('input', () => { controlSettings.position = Number(ui.joystickPosition.value); applyControlSettings(true); });
+  ui.joystickSize.addEventListener('input', () => { controlSettings.size = Number(ui.joystickSize.value); applyControlSettings(true); });
+  ui.handednessToggle.addEventListener('click', () => { controlSettings.side = controlSettings.side === 'left' ? 'right' : 'left'; applyControlSettings(true); });
+  ui.autoUltimateToggle.addEventListener('click', () => { controlSettings.autoUltimate = !controlSettings.autoUltimate; applyControlSettings(true); });
   $('pause-button').addEventListener('click', () => { if (state === 'running') setMode('paused'); });
   $('ultimate-button').addEventListener('pointerdown', (e) => { e.preventDefault(); castUltimate(); });
   ui.toastUse.addEventListener('click', useToast);
@@ -144,7 +169,7 @@
   ui.joystick.addEventListener('pointermove', e => { if (e.pointerId === joystickPointer) moveStick(e); });
   function endStick(e) { if (e.pointerId !== joystickPointer) return; joystickPointer = null; joyX = joyY = 0; ui.stick.style.transform = ''; }
   ui.joystick.addEventListener('pointerup', endStick); ui.joystick.addEventListener('pointercancel', endStick);
-  function moveStick(e) { const r = ui.joystick.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), len = Math.hypot(dx, dy), scale = Math.min(1, len / 42); joyX = len ? dx / len * scale : 0; joyY = len ? dy / len * scale : 0; ui.stick.style.transform = `translate(${joyX * 32}px,${joyY * 32}px)`; }
+  function moveStick(e) { const r = ui.joystick.getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2), len = Math.hypot(dx, dy), travel = r.width * .28, scale = Math.min(1, len / travel); joyX = len ? dx / len * scale : 0; joyY = len ? dy / len * scale : 0; ui.stick.style.transform = `translate(${joyX * travel}px,${joyY * travel}px)`; }
 
   function sound(freq = 520, duration = .07, type = 'sine', volume = .035) {
     if (!audioCtx) return;
@@ -163,7 +188,38 @@
       kind === 'wolf' ? { hp: 145 + t * 1.25, speed: 50, radius: 23, damage: 19, color: '#cf7750', xp: 6 } :
       kind === 'bat' ? { hp: 34 + t * .22, speed: 88, radius: 12, damage: 10, color: '#bb78ff', xp: 2 } :
       { hp: 46 + t * .4, speed: 48, radius: 15, damage: 12, color: '#e95d70', xp: 2 };
-    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8) });
+    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8), bossAttackCooldown: 3.2, bossAttackWindup: 0, bossAttackCount: 0, bossAttackType: 'slam', bossAimX: 0, bossAimY: 0, bossAttackRadius: 152 });
+  }
+  function damagePlayer(amount) {
+    if (player.invuln > 0 || state !== 'running') return false;
+    player.invuln = .62;
+    if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); return false; }
+    player.hp -= amount; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035);
+    if (player.character === 'jao' && player.jaoEvolutionPath === 'charge') triggerJaoPulse();
+    if (player.hp <= 0) gameOver();
+    return true;
+  }
+  function startBossAttack(boss) {
+    boss.bossAttackType = boss.bossAttackCount++ % 2 === 0 ? 'slam' : 'beam';
+    boss.bossAttackWindup = 1.05; boss.bossAttackCooldown = 5.1;
+    if (boss.bossAttackType === 'beam') {
+      const dx = player.x - boss.x, dy = player.y - boss.y, length = Math.hypot(dx, dy) || 1;
+      boss.bossAimX = boss.x + dx / length * 620; boss.bossAimY = boss.y + dy / length * 620;
+      showToast('REI DO POSTE: prepara o raio! Sai da linha!');
+    } else showToast('REI DO POSTE: impacto carregando! Sai da área!');
+  }
+  function resolveBossAttack(boss) {
+    if (boss.bossAttackType === 'slam') {
+      ultimateVfx = { x: boss.x, y: boss.y, radius: boss.bossAttackRadius, life: .34, max: .34, targets: [], color: '#ff596f', type: 'bossImpact' };
+      if (dist2(player, boss) <= (boss.bossAttackRadius + 12) ** 2) { floatText(player.x, player.y - 32, 'IMPACTO!', '#ff8290'); damagePlayer(25); }
+    } else {
+      const a = { x: boss.x, y: boss.y }, b = { x: boss.bossAimX, y: boss.bossAimY }, abx = b.x - a.x, aby = b.y - a.y;
+      const t = clamp(((player.x - a.x) * abx + (player.y - a.y) * aby) / (abx * abx + aby * aby || 1), 0, 1);
+      const dx = player.x - (a.x + t * abx), dy = player.y - (a.y + t * aby);
+      ultimateVfx = { x: boss.x, y: boss.y, radius: 0, life: .28, max: .28, targets: [{ x: boss.bossAimX, y: boss.bossAimY, phase: 0 }], color: '#ff596f', type: 'chain' };
+      if (dx * dx + dy * dy <= 36 ** 2 && t > .04) { floatText(player.x, player.y - 32, 'RAIO!', '#ff8290'); damagePlayer(22); }
+    }
+    emit(boss.x, boss.y, '#ff6478', 16, 1.2); sound(105, .28, 'sawtooth', .05);
   }
   function nearestEnemy(from = player) { let best = null, bd = Infinity; for (const e of enemies) { const d = dist2(from, e); if (d < bd) { best = e; bd = d; } } return best; }
   const petTypes = ['quokka', 'capybara', 'firefly', 'polish', 'robot', 'raccoon'];
@@ -211,6 +267,7 @@
   function startUltimateCooldown() { player.ult = player.ultMax * Math.max(.1, 1 - batteryReserved); batteryReserved = 0; }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
+    runStats.ultimates++;
     if (player.character === 'alice') {
       player.nailElement = (player.nailElement + 1) % aliceElements.length;
       const element = aliceElements[player.nailElement]; startUltimateCooldown();
@@ -288,7 +345,7 @@
       }
     }
   }
-  function defeat(e) { if (e.defeated) return; e.defeated = true; if (player.character === 'alice' && player.aliceEvolutionPath === 'lifesteal' && e.aliceLifestealMark && player.aliceKillHeal > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.aliceKillHeal); kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function defeat(e) { if (e.defeated) return; e.defeated = true; if (e.kind === 'boss') runStats.bossDefeated = true; if (player.character === 'alice' && player.aliceEvolutionPath === 'lifesteal' && e.aliceLifestealMark && player.aliceKillHeal > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.aliceKillHeal); kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
   function vulnerabilityMultiplier(enemy) { return enemy.vulnerableTimer > 0 ? (player.character === 'alice' && player.aliceEvolutionPath === 'charm' ? player.aliceCharmMultiplier : 1.25) : 1; }
   function chainShock(first, baseDamage) {
     const linked = [first], targets = [];
@@ -445,7 +502,7 @@
       r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: 0, hitEnemies, guiBouncesLeft: bullet.guiBouncesLeft - 1 });
     emit(hitEnemy.x, hitEnemy.y, '#8cecff', 3, .35);
   }
-  function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
+  function addXp(value) { const gained = Math.round(value * player.xpGain); runStats.xp += gained; player.xp += gained; if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
     { id: 'rapid', rarity: 'rare', icon: '⚡', category: 'COMBATE', title: 'Gatilho rápido', desc: 'Atira 18% mais rápido.', apply: () => player.fireRate = Math.max(.16, player.fireRate * .82) },
     { id: 'damage', rarity: 'epic', icon: '✦', category: 'COMBATE', title: 'Carga forte', desc: 'Seus tiros causam 30% mais dano.', apply: () => player.damage *= 1.3 },
@@ -510,7 +567,7 @@
       b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
     });
   }
-  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : player.character === 'gui' ? 'Gui' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
+  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); runStats.upgrades++; if (choice.evolution) runStats.evolutions.push(choice.title); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : player.character === 'gui' ? 'Gui' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   const chestDrops = [
     { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
@@ -520,6 +577,7 @@
     { kind: 'xp-snack', name: 'Snack de XP', weight: 10, color: '#ad9aff', icon: '✦' }
   ];
   function openChest() {
+    runStats.chests++;
     const total = chestDrops.reduce((sum, drop) => sum + drop.weight, 0); let roll = Math.random() * total, reward = chestDrops[0];
     for (const drop of chestDrops) { roll -= drop.weight; if (roll < 0) { reward = drop; break; } }
     items.push({ x: chest.x, y: chest.y, kind: reward.kind, pulse: 0, age: 0 }); chestProgress = 0;
@@ -554,6 +612,7 @@
 
   function update(dt) {
     elapsed += dt; coffeeTimer = Math.max(0, coffeeTimer - dt); player.ult = Math.max(0, player.ult - dt); player.invuln = Math.max(0, player.invuln - dt); player.shotFlash = Math.max(0, player.shotFlash - dt); if (ultimateVfx && (ultimateVfx.life -= dt) <= 0) ultimateVfx = null;
+    if (controlSettings.autoUltimate && elapsed > 3 && enemies.length && player.ult <= 0) castUltimate();
     let ix = (keys.has('d') || keys.has('arrowright') ? 1 : 0) - (keys.has('a') || keys.has('arrowleft') ? 1 : 0) + joyX;
     let iy = (keys.has('s') || keys.has('arrowdown') ? 1 : 0) - (keys.has('w') || keys.has('arrowup') ? 1 : 0) + joyY;
     const il = Math.hypot(ix, iy); if (il > 1) { ix /= il; iy /= il; }
@@ -590,8 +649,17 @@
       if (e.hp <= 0) { defeat(e); enemies.splice(i, 1); continue; }
       e.stun = Math.max(0, (e.stun || 0) - dt);
       if (e.stun > 0) { e.hit = Math.max(e.hit, .08); continue; }
+      if (e.kind === 'boss') {
+        e.bossAttackCooldown -= dt;
+        if (e.bossAttackWindup > 0) {
+          e.bossAttackWindup = Math.max(0, e.bossAttackWindup - dt); e.hit = Math.max(e.hit, .04); e.wobble += dt * 2;
+          if (e.bossAttackWindup <= 0) resolveBossAttack(e);
+          continue;
+        }
+        if (e.bossAttackCooldown <= 0) { startBossAttack(e); continue; }
+      }
       const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
-      if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.character === 'jao' && player.jaoEvolutionPath === 'charge') triggerJaoPulse(); if (player.hp <= 0) gameOver(); } }
+      if (len < e.radius + 17) damagePlayer(e.damage);
     }
     for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) { defeat(enemies[i]); enemies.splice(i, 1); }
     for (let i = bullets.length - 1; i >= 0; i--) {
@@ -630,7 +698,15 @@
     if (toastTimer > 0 && (toastTimer -= dt) <= 0) ui.toast.classList.add('hidden');
     updateHud();
   }
-  function gameOver() { player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level; try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {} setMode('gameover'); }
+  function gameOver() {
+    player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level;
+    $('final-xp').textContent = runStats.xp; $('final-chests').textContent = runStats.chests; $('final-ults').textContent = runStats.ultimates;
+    $('final-title').textContent = runStats.bossDefeated ? 'O Rei do Poste caiu!' : 'A horda levou essa.';
+    $('final-boss').textContent = runStats.bossDefeated ? 'Chefe derrotado: Rei do Poste.' : bossSpawned ? 'O Rei do Poste escapou desta vez.' : 'O Rei do Poste não chegou a aparecer.';
+    $('final-evolutions').textContent = `Melhorias escolhidas: ${runStats.upgrades}. Evoluções: ${runStats.evolutions.length ? runStats.evolutions.join(' → ') : 'nenhuma nesta run'}.`;
+    try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {}
+    setMode('gameover');
+  }
   function updateHud() {
     ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`;
     ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills;
@@ -794,6 +870,21 @@
       ctx.fillStyle = '#17202a'; ctx.fillRect(-r * .45, -r * .14, 3, 4); ctx.fillRect(r * .18, -r * .14, 3, 4); ctx.fillStyle = '#fff'; ctx.fillRect(-r * .38, -r * .12, 1, 1);
     }
     ctx.restore();
+    if (e.kind === 'boss' && e.bossAttackWindup > 0) {
+      const blink = .42 + Math.sin(elapsed * 18) * .2; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = blink;
+      ctx.strokeStyle = '#ff506e'; ctx.fillStyle = '#ff506e';
+      if (e.bossAttackType === 'slam') {
+        ctx.globalAlpha *= .22; ctx.beginPath(); ctx.arc(p.x, p.y, e.bossAttackRadius, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = blink; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, e.bossAttackRadius, 0, Math.PI * 2); ctx.stroke();
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(p.x, p.y, e.bossAttackRadius * (.45 + .45 * (1 - e.bossAttackWindup / 1.05)), 0, Math.PI * 2); ctx.stroke();
+      } else {
+        const end = screenPos({ x: e.bossAimX, y: e.bossAimY });
+        ctx.globalAlpha *= .22; ctx.lineWidth = 72; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+        ctx.globalAlpha = blink; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+        ctx.strokeStyle = '#fff1d8'; ctx.globalAlpha *= .62; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(end.x, end.y); ctx.stroke();
+      }
+      ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    }
     if (e.hp < e.max) { const barWidth = e.kind === 'boss' ? r * 2.6 : r * 2, barY = p.y - drawHeight * .58 - 7; ctx.fillStyle = '#0d1014'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth, 3); ctx.fillStyle = e.kind === 'boss' ? '#4bdfff' : '#ff6979'; ctx.fillRect(p.x - barWidth / 2, barY, barWidth * clamp(e.hp / e.max, 0, 1), 3); }
   }
   function drawPet(c, x, y, target, world) {

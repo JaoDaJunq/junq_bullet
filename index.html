@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#11151d">
   <title>Junq Bullet</title>
-  <link rel="stylesheet" href="style.css?v=mobile-thumb-xp-20261008">
+  <link rel="stylesheet" href="style.css?v=controls-boss-summary-20261008">
 </head>
 <body>
   <canvas id="game" aria-label="Junq Bullet, jogo de sobrevivência"></canvas>
@@ -41,7 +41,7 @@
       <div class="arena-label"><i></i> ARENA PROCEDURAL · NOITE</div>
       <div class="feature-row"><span>⚡ tiro automático</span><span>↑ evolução</span><span>▣ baús</span></div>
       <button id="start-button" class="primary"><span>ESCOLHER PERSONAGEM</span><b>↗</b></button>
-      <small class="help">PC: WASD / setas · Espaço: ultimate · F: usar torrada · P: pausar<br>Celular: joystick esquerdo · botão azul: ultimate · torrada: curar</small>
+      <small class="help">PC: WASD / setas · Espaço: ultimate · F: usar torrada · P: pausar<br>Celular: joystick configurável · botão azul: ultimate · torrada: curar</small>
     </section>
     <section id="character-select" class="panel hidden character-panel">
       <div class="eyebrow">ESCOLHE TEU SOBREVIVENTE</div>
@@ -79,13 +79,28 @@
       <p id="upgrade-hint" class="upgrade-hint">Usa <b>1, 2 ou 3</b> para escolher. Chance por card: <b>comum 45% · raro 30% · épico 18% · lendário 7%</b>.</p>
       <div id="upgrade-options" class="cards"></div>
     </section>
-    <section id="pause-panel" class="panel hidden"><div class="eyebrow">PAUSA</div><h2>Respira, MVP.</h2><button id="resume-button" class="primary">CONTINUAR</button></section>
+    <section id="pause-panel" class="panel hidden pause-panel">
+      <div class="eyebrow">PAUSA</div><h2>Respira, MVP.</h2>
+      <div class="control-settings">
+        <div class="settings-title">CONTROLES DO CELULAR</div>
+        <label class="setting-row" for="joystick-position"><span>Posição do joystick <b id="joystick-position-label">24%</b></span><input id="joystick-position" type="range" min="12" max="38" value="24"></label>
+        <label class="setting-row" for="joystick-size"><span>Tamanho do joystick <b id="joystick-size-label">116 px</b></span><input id="joystick-size" type="range" min="96" max="148" value="116"></label>
+        <button id="handedness-toggle" class="setting-toggle" type="button">Joystick: lado esquerdo</button>
+        <button id="auto-ultimate-toggle" class="setting-toggle" type="button" aria-pressed="false">Ultimate automática: desligada</button>
+      </div>
+      <button id="resume-button" class="primary">CONTINUAR</button>
+    </section>
     <section id="gameover-panel" class="panel hidden">
-      <div class="eyebrow">FIM DE JOGO</div><h2>A horda levou essa.</h2>
-      <div class="result"><span>Tempo <b id="final-time">00:00</b></span><span>Derrotados <b id="final-kills">0</b></span><span>Nível <b id="final-level">1</b></span></div>
+      <div class="eyebrow">FIM DE JOGO</div><h2 id="final-title">A horda levou essa.</h2>
+      <div class="result run-summary">
+        <span>Tempo <b id="final-time">00:00</b></span><span>Derrotados <b id="final-kills">0</b></span><span>Nível <b id="final-level">1</b></span>
+        <span>XP coletado <b id="final-xp">0</b></span><span>Baús abertos <b id="final-chests">0</b></span><span>Ultimates <b id="final-ults">0</b></span>
+      </div>
+      <p id="final-boss" class="run-note">O Rei do Poste escapou.</p>
+      <p id="final-evolutions" class="run-note"></p>
       <button id="retry-button" class="primary">TENTAR DE NOVO</button>
     </section>
   </main>
-  <script src="game.js?v=mobile-thumb-xp-20261008"></script>
+  <script src="game.js?v=controls-boss-summary-20261008"></script>
 </body>
 </html>
