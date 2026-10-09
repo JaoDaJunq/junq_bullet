@@ -954,11 +954,14 @@
       ctx.restore(); return;
     }
     if (b.math) {
-      const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle + Math.sin(b.phase + b.age * 8) * .12);
-      ctx.globalAlpha = .24; ctx.fillStyle = '#36dfff'; ctx.beginPath(); ctx.arc(0, 0, b.r * 2.5, 0, Math.PI * 2); ctx.fill();
-      ctx.globalAlpha = 1; ctx.fillStyle = '#06253a'; ctx.strokeStyle = '#baf8ff'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(0, -b.r * 1.65); ctx.lineTo(b.r * 1.65, 0); ctx.lineTo(0, b.r * 1.65); ctx.lineTo(-b.r * 1.65, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#f2ffff'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(b.mathSymbol || '+', 0, .5);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.translate(p.x, p.y);
+      ctx.globalAlpha = 1;
+      ctx.font = 'bold 17px "Cambria Math", "STIX Two Math", monospace';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = b.color || '#dffcff';
+      ctx.shadowColor = b.color || '#dffcff'; ctx.shadowBlur = 7;
+      ctx.fillText(b.mathSymbol || '+', 0, 0);
       ctx.restore(); return;
     }
     if (b.scratch) {
@@ -1100,7 +1103,7 @@
   }
   function drawCaetanoOrientedFrame(image, col, facing, cell, rowH, size, sx, footY) {
     const sourceRow = facing === 3 ? 2 : facing;
-    if (facing === 3) { ctx.save(); ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, -size / 2, footY - size, size, size); ctx.restore(); }
+    if (facing === 3) { ctx.save(); ctx.translate(sx, 0); ctx.scale(-1, 1); ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, size / 2, footY - size, size, size); ctx.restore(); }
     else ctx.drawImage(image, col * cell, sourceRow * rowH, cell, rowH, sx - size / 2, footY - size, size, size);
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
