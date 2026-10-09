@@ -43,7 +43,7 @@
   const ui = {
     hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
-    options: $('upgrade-options'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
+    options: $('upgrade-options'), upgradeEyebrow: $('upgrade-eyebrow'), upgradeTitle: $('upgrade-title'), upgradeHint: $('upgrade-hint'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
     pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltIcon: $('desktop-ultimate-icon'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
@@ -52,8 +52,9 @@
   let toastCount = 0;
   let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
-  const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [];
-  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
+  let jaoTrailTimer = 0;
+  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
@@ -110,9 +111,9 @@
   setMode('menu');
   function reset() {
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
-    toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0;
+    toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
@@ -252,12 +253,12 @@
     const linked = [first], targets = [];
     let current = first;
     for (let hop = 1; hop < 3; hop++) {
-      const next = enemies.filter(e => e.hp > 0 && !linked.includes(e) && dist2(current, e) <= 125 * 125)
+      const next = enemies.filter(e => e.hp > 0 && !linked.includes(e) && dist2(current, e) <= player.jaoChainRadius ** 2)
         .sort((a, b) => dist2(current, a) - dist2(current, b))[0];
       if (!next) break;
       linked.push(next);
-      const damage = baseDamage * (hop === 1 ? .7 : .5) * (next.vulnerableTimer > 0 ? 1.25 : 1);
-      next.hp -= damage; next.hit = .18; next.stun = Math.max(next.stun || 0, .22);
+      const damage = baseDamage * (hop === 1 ? .7 : .5) * player.jaoChainDamage * (next.vulnerableTimer > 0 ? 1.25 : 1);
+      next.hp -= damage; next.hit = .18; next.stun = Math.max(next.stun || 0, player.jaoChainStun);
       emit(next.x, next.y, '#6ceaff', 5, .52);
       floatText(next.x, next.y - next.radius - 5, `⚡ ${Math.round(damage)}`, '#a4f4ff');
       targets.push({ x: next.x, y: next.y, phase: rand(0, 6.28) });
@@ -265,6 +266,53 @@
       current = next;
     }
     if (targets.length) ultimateVfx = { x: first.x, y: first.y, radius: 0, life: .24, max: .24, targets, color: '#55dcff', type: 'chain' };
+  }
+  function triggerJaoPulse() {
+    const radius2 = player.jaoPulseRadius ** 2;
+    ultimateVfx = { x: player.x, y: player.y, radius: player.jaoPulseRadius, life: .36, max: .36, targets: [], color: '#bd91ff', type: 'pulse' };
+    emit(player.x, player.y, '#bd91ff', 18, .8);
+    for (const e of enemies) {
+      if (dist2(player, e) > radius2) continue;
+      e.hp -= player.damage * player.jaoPulseDamage; e.hit = .2;
+      e.stun = Math.max(e.stun || 0, player.jaoPulseStun);
+      emit(e.x, e.y, '#c6a5ff', 3, .45);
+    }
+    if (player.jaoPulseShield) shieldHits = Math.min(2, shieldHits + 1);
+  }
+  function jaoEvolutionChoices(tier) {
+    const choice = (id, icon, title, desc, color, apply) => ({ id, icon, title, desc, color, rarity: 'legendary', category: `EVOLUÇÃO ${tier === 16 ? 'I' : 'II'}`, evolution: tier, apply });
+    if (tier === 16) return [
+      choice('trail', 'ϟ', 'Rastro de Trovão', 'Enquanto corre, deixa raios no chão que ferem e desaceleram quem passar por cima.', '#5deaff', () => {
+        player.jaoEvolutionPath = 'trail'; player.jaoEvolution = 1;
+      }),
+      choice('chain', '↯', 'Condutor de Horda', 'Seu choque em cadeia ganha alcance e força. Continua limitado a três inimigos por tiro.', '#ffe174', () => {
+        player.jaoEvolutionPath = 'chain'; player.jaoEvolution = 1; player.jaoChainDamage = 1.3; player.jaoChainRadius = 150;
+      }),
+      choice('charge', '◉', 'Pulso de Contracarga', 'Ao sofrer um golpe, libera uma descarga ao redor que causa dano e atordoa os inimigos.', '#c49aff', () => {
+        player.jaoEvolutionPath = 'charge'; player.jaoEvolution = 1;
+      })
+    ];
+    const finish = (id, icon, title, desc, color, apply) => choice(id, icon, title, desc, color, () => {
+      apply(); player.jaoEvolution = 2; player.jaoEvolutionFinal = id;
+    });
+    const branches = {
+      trail: [
+        finish('storm-road', 'ϟ', 'Tempestade de Asfalto', 'O rastro dura mais e cada raio causa dano maior.', '#5deaff', () => { player.jaoTrailLife += .7; player.jaoTrailDamage += .14; player.jaoTrailWidth += 4; }),
+        finish('paralyzing-trail', '❄', 'Rastro Paralisante', 'Os raios deixam a horda ainda mais lenta e aplicam pequenos atordoamentos.', '#8cefff', () => { player.jaoTrailSlow += .5; player.jaoTrailStun = .16; }),
+        finish('conductor-step', '➤', 'Passo Condutor', 'Ganha 12% de velocidade; o rastro fica mais largo e doloroso.', '#b3f7ff', () => { player.speed *= 1.12; player.jaoTrailWidth += 5; player.jaoTrailDamage += .08; })
+      ],
+      chain: [
+        finish('hot-arc', '↯', 'Arco Superaquecido', 'Os saltos elétricos causam muito mais dano.', '#ffe174', () => { player.jaoChainDamage += .5; }),
+        finish('wide-network', '⌁', 'Rede Condutora', 'O choque alcança alvos mais distantes, sem passar do limite de três.', '#fff0ae', () => { player.jaoChainRadius += 75; }),
+        finish('long-shock', 'ϟ', 'Choque Prolongado', 'Cada inimigo atingido pelo encadeamento fica atordoado por mais tempo.', '#ffd87c', () => { player.jaoChainStun += .42; })
+      ],
+      charge: [
+        finish('volt-shield', '⬡', 'Escudo Voltaico', 'Cada contragolpe também recarrega um bloqueio de dano.', '#c49aff', () => { player.jaoPulseShield = true; }),
+        finish('wide-pulse', '◉', 'Pulso Expandido', 'A descarga ganha muito mais alcance e dano.', '#d6b8ff', () => { player.jaoPulseRadius += 70; player.jaoPulseDamage += .45; }),
+        finish('deep-resonance', 'ϟ', 'Ressonância Profunda', 'O pulso atordoa por mais tempo e a ultimate recarrega 10% mais rápido.', '#a98aff', () => { player.jaoPulseStun += .45; player.ultMax *= .9; })
+      ]
+    };
+    return branches[player.jaoEvolutionPath] || [];
   }
   function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
@@ -289,15 +337,38 @@
   let currentChoices = [];
   function rollRarity(available) { const pool = Object.entries(rarityChances).filter(([rarity]) => available.has(rarity)); const total = pool.reduce((sum, [, weight]) => sum + weight, 0); let roll = Math.random() * total; for (const [rarity, weight] of pool) { roll -= weight; if (roll < 0) return rarity; } return pool[pool.length - 1][0]; }
   function makeUpgradeOptions() {
-    const remaining = [...upgrades]; currentChoices = [];
-    while (currentChoices.length < 3 && remaining.length) {
-      const rarity = rollRarity(new Set(remaining.map(u => u.rarity))), pool = remaining.filter(u => u.rarity === rarity);
-      const chosen = pool[Math.floor(Math.random() * pool.length)]; currentChoices.push(chosen); remaining.splice(remaining.indexOf(chosen), 1);
+    const evolutionLevel = player.character === 'jao' && player.level === 16 && player.jaoEvolution === 0 ? 16 :
+      player.character === 'jao' && player.level === 36 && player.jaoEvolution === 1 ? 36 : 0;
+    currentChoices = evolutionLevel ? jaoEvolutionChoices(evolutionLevel) : [];
+    if (evolutionLevel) {
+      const pathNames = { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
+      ui.upgradeEyebrow.textContent = evolutionLevel === 16 ? 'NÍVEL 16 · EVOLUÇÃO DO JÃO' : `NÍVEL 36 · ${pathNames[player.jaoEvolutionPath] || 'FORMA FINAL'}`;
+      ui.upgradeTitle.textContent = evolutionLevel === 16 ? 'Escolhe teu caminho elétrico.' : 'Desperta a forma final.';
+      ui.upgradeHint.innerHTML = evolutionLevel === 16
+        ? 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do Jão.'
+        : 'Escolhe como evoluir o caminho que tu abriu no nível 16. Cada rota tem uma forma final.';
+    } else {
+      const remaining = [...upgrades];
+      while (currentChoices.length < 3 && remaining.length) {
+        const rarity = rollRarity(new Set(remaining.map(u => u.rarity))), pool = remaining.filter(u => u.rarity === rarity);
+        const chosen = pool[Math.floor(Math.random() * pool.length)]; currentChoices.push(chosen); remaining.splice(remaining.indexOf(chosen), 1);
+      }
+      ui.upgradeEyebrow.textContent = 'NÍVEL ALCANÇADO · ESCOLHE 1';
+      ui.upgradeTitle.textContent = 'Qual vai ser teu próximo poder?';
+      ui.upgradeHint.innerHTML = 'Usa <b>1, 2 ou 3</b> para escolher. Chance por card: <b>comum 45% · raro 30% · épico 18% · lendário 7%</b>.';
     }
     ui.options.innerHTML = '';
-    currentChoices.forEach((u, i) => { const chance = rarityChances[u.rarity]; const b = document.createElement('button'); b.className = `upgrade-card rarity-${u.rarity}`; b.setAttribute('aria-label', `${rarityNames[u.rarity]} (${chance}% por card) · ${i + 1}: ${u.title}. ${u.desc}`); b.innerHTML = `<span class="card-rarity">${rarityNames[u.rarity]} · ${chance}%</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`; b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b); });
+    currentChoices.forEach((u, i) => {
+      const chance = rarityChances[u.rarity], b = document.createElement('button'), guaranteed = !!u.evolution;
+      b.className = `upgrade-card rarity-${u.rarity}${guaranteed ? ' evolution-choice' : ''}`;
+      if (guaranteed) { b.style.setProperty('--card-accent', u.color); b.style.setProperty('--card-glow', u.color); }
+      b.setAttribute('aria-label', guaranteed ? `${u.category}: ${u.title}. ${u.desc}` : `${rarityNames[u.rarity]} (${chance}% por card) · ${i + 1}: ${u.title}. ${u.desc}`);
+      const badge = guaranteed ? `EVOLUÇÃO · NV ${u.evolution}` : `${rarityNames[u.rarity]} · ${chance}%`;
+      b.innerHTML = `<span class="card-rarity">${badge}</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`;
+      b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
+    });
   }
-  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; currentChoices[i].apply(); setMode('running'); showToast(`${currentChoices[i].title} adquirido!`); }
+  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `Jão evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   const chestDrops = [
     { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
@@ -347,6 +418,12 @@
     const moving = Math.hypot(ix, iy) > .09;
     if (moving) { player.facing = Math.abs(ix) > Math.abs(iy) ? (ix < 0 ? 2 : 3) : (iy < 0 ? 1 : 0); player.walk += dt * 9; }
     player.vx = ix * player.speed; player.vy = iy * player.speed; player.x += player.vx * dt; player.y += player.vy * dt;
+    if (player.character === 'jao' && player.jaoEvolutionPath === 'trail') {
+      jaoTrailTimer -= dt;
+      if (moving && jaoTrailTimer <= 0) { jaoTrail.push({ x: player.x, y: player.y, life: player.jaoTrailLife, max: player.jaoTrailLife, phase: rand(0, 6.28) }); jaoTrailTimer = .11; }
+      for (let i = jaoTrail.length - 1; i >= 0; i--) { jaoTrail[i].life -= dt; if (jaoTrail[i].life <= 0) jaoTrail.splice(i, 1); }
+      while (jaoTrail.length > 28) jaoTrail.shift();
+    }
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
     if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
     fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') fireCardVolley(target); else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); } fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
@@ -354,13 +431,27 @@
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
       e.poisonTimer = Math.max(0, (e.poisonTimer || 0) - dt); e.slowTimer = Math.max(0, (e.slowTimer || 0) - dt); e.vulnerableTimer = Math.max(0, (e.vulnerableTimer || 0) - dt);
+      if (player.character === 'jao' && player.jaoEvolutionPath === 'trail') {
+        e.jaoTrailCooldown = Math.max(0, (e.jaoTrailCooldown || 0) - dt);
+        let onTrail = false;
+        for (const spark of jaoTrail) if (dist2(e, spark) < (e.radius + player.jaoTrailWidth) ** 2) { onTrail = true; break; }
+        if (onTrail) {
+          e.slowTimer = Math.max(e.slowTimer, player.jaoTrailSlow);
+          if (e.jaoTrailCooldown <= 0) {
+            e.hp -= player.damage * player.jaoTrailDamage; e.hit = .14; e.jaoTrailCooldown = player.jaoTrailTick;
+            if (player.jaoTrailStun > 0) e.stun = Math.max(e.stun || 0, player.jaoTrailStun);
+            emit(e.x, e.y, '#77eaff', 2, .35);
+          }
+        }
+      }
       if (e.poisonTimer > 0) e.hp -= e.poisonDps * dt;
       if (e.hp <= 0) { defeat(e); enemies.splice(i, 1); continue; }
       e.stun = Math.max(0, (e.stun || 0) - dt);
       if (e.stun > 0) { e.hit = Math.max(e.hit, .08); continue; }
       const moveSpeed = e.speed * (e.slowTimer > 0 ? .55 : 1); e.x += dx / len * moveSpeed * dt; e.y += dy / len * moveSpeed * dt; e.hit = Math.max(0, e.hit - dt); e.wobble += dt * 5;
-      if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.hp <= 0) gameOver(); } }
+      if (len < e.radius + 17 && player.invuln <= 0) { player.invuln = .62; if (shieldHits > 0) { shieldHits--; emit(player.x, player.y, '#8ed6ff', 18, 1.1); sound(460, .12, 'triangle', .04); showToast(`Crachá bloqueou o golpe! ${shieldHits ? `Restam ${shieldHits}.` : ''}`); } else { player.hp -= e.damage; emit(player.x, player.y, '#ff6478', 8); sound(120, .12, 'sawtooth', .035); if (player.character === 'jao' && player.jaoEvolutionPath === 'charge') triggerJaoPulse(); if (player.hp <= 0) gameOver(); } }
     }
+    for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) { defeat(enemies[i]); enemies.splice(i, 1); }
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
       if (!b.card) { b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); }
@@ -381,7 +472,7 @@
       }
       if (gone) bullets.splice(i, 1);
     }
-    for (let i = xpOrbs.length - 1; i >= 0; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value * (doubleXpOrbs > 0 ? 2 : 1)); if (doubleXpOrbs > 0) doubleXpOrbs--; emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
+    for (let i = xpOrbs.length - 1; i >= 0 && state === 'running'; i--) { const o = xpOrbs[i], d = Math.sqrt(dist2(o, player)); o.phase += dt * 5; if (d < player.pickup) { const k = 1 - d / player.pickup; o.x += (player.x - o.x) * Math.min(1, dt * (2 + k * 8)); o.y += (player.y - o.y) * Math.min(1, dt * (2 + k * 8)); } if (d < 23) { addXp(o.value * (doubleXpOrbs > 0 ? 2 : 1)); if (doubleXpOrbs > 0) doubleXpOrbs--; emit(o.x, o.y, '#65dbff', 3, .35); xpOrbs.splice(i, 1); } }
     if (!chest) { chestTimer -= dt; if (chestTimer <= 0) { spawnChest(); chestTimer = 80; } }
     if (chest) { chest.pulse += dt * 4; const d = Math.sqrt(dist2(player, chest)); const still = !moving && d < 46; if (still) { chestProgress += dt; ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = chestProgress >= 3 ? 'BAÚ ABERTO!' : 'Fica parado para abrir'; ui.chestFill.style.width = `${Math.min(100, chestProgress / 3 * 100)}%`; if (chestProgress >= 3) openChest(); } else { chestProgress = 0; ui.chest.classList.add('hidden'); if (d < 85) { ui.chest.classList.remove('hidden'); ui.chestLabel.textContent = 'Chega perto e fica parado'; ui.chestFill.style.width = '0%'; } } }
     let nearbyItem = null, nearbyItemDistance = Infinity;
@@ -415,6 +506,17 @@
     ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = floorPattern; ctx.fillRect(-ox, -oy, w + size, h + size); ctx.restore();
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
+  function drawJaoTrail() {
+    if (!jaoTrail.length) return;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (const spark of jaoTrail) {
+      const p = screenPos(spark), fade = clamp(spark.life / spark.max, 0, 1), pulse = .8 + Math.sin(elapsed * 13 + spark.phase) * .2;
+      ctx.globalAlpha = fade * .18; ctx.fillStyle = '#56dfff'; ctx.beginPath(); ctx.arc(p.x, p.y, player.jaoTrailWidth * 2.4 * pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = fade * .8; ctx.strokeStyle = '#a9f5ff'; ctx.lineWidth = 1.5; ctx.beginPath();
+      ctx.moveTo(p.x - 5, p.y - 5); ctx.lineTo(p.x + 1, p.y); ctx.lineTo(p.x - 2, p.y + 2); ctx.lineTo(p.x + 5, p.y + 7); ctx.stroke();
+    }
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   function drawChest() { if (!chest) return; const p = screenPos(chest); ctx.save(); ctx.translate(p.x,p.y+Math.sin(chest.pulse)*3); ctx.fillStyle='rgba(255,200,93,.16)';ctx.fillRect(-20,-18,40,40);ctx.fillStyle='#b96d26';ctx.fillRect(-15,-10,30,22);ctx.fillStyle='#edb84e';ctx.fillRect(-16,-14,32,9);ctx.fillStyle='#78421d';ctx.fillRect(-3,-7,6,17);ctx.fillStyle='#fff0a0';ctx.fillRect(-2,-7,4,5);ctx.restore(); }
   function drawItem(item) {
     const p = screenPos(item), bob = Math.sin(item.pulse) * 3, reward = chestDrops.find(drop => drop.kind === item.kind) || chestDrops[0];
@@ -626,12 +728,29 @@
     }
     ctx.restore();
   }
+  function drawJaoEvolution(x, y) {
+    const stage = player.jaoEvolution, colors = { trail: '#58e4ff', chain: '#ffe078', charge: '#bb91ff' }, color = colors[player.jaoEvolutionPath] || '#58e4ff';
+    const pulse = .75 + Math.sin(elapsed * (stage === 2 ? 6 : 4)) * .12;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
+    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2 : 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y - 31, 23 + stage * 3, 39 + stage * 4, 0, .18, Math.PI * 1.78); ctx.stroke();
+    ctx.globalAlpha *= .82; ctx.strokeStyle = '#efffff'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(x - 7, y - 48); ctx.lineTo(x - 1, y - 43); ctx.lineTo(x - 5, y - 37); ctx.lineTo(x + 4, y - 40); ctx.lineTo(x + 1, y - 34); ctx.lineTo(x + 8, y - 31); ctx.stroke();
+    const bolt = (bx, by, flip = 1, scale = 1) => {
+      ctx.save(); ctx.translate(bx, by); ctx.scale(flip * scale, scale); ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(4, -2); ctx.lineTo(1, 0); ctx.lineTo(5, 7); ctx.stroke(); ctx.restore();
+    };
+    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.2 : 1.6;
+    bolt(x - 20, y - 38, 1, .8); bolt(x + 20, y - 38, -1, .8);
+    if (stage === 2) { ctx.globalAlpha = .72; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 29, 31, 49, 0, -1.9, .9); ctx.stroke(); bolt(x - 27, y - 20, 1, 1.1); bolt(x + 27, y - 20, -1, 1.1); }
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
+    if (player.character === 'jao' && player.jaoEvolution > 0) drawJaoEvolution(sx, sy);
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }
   }
@@ -668,7 +787,7 @@
     if (boss) drawObjectiveArrow(boss, '#65ddeb', boss.radius * 2 + 12);
   }
   function render() {
-    ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor();
+    ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor(); drawJaoTrail();
     for(const o of xpOrbs){const p=screenPos(o);ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();}
     drawChest(); for(const item of items) drawItem(item); for(const b of bullets) drawBullet(b);
     for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
