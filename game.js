@@ -62,6 +62,17 @@
   aliceAtlas.src = 'assets/alice-walk.png';
   const guiAtlas = new Image();
   guiAtlas.src = 'assets/gui-walk.png';
+  const loadEvolutionAtlas = (file) => { const image = new Image(); image.src = `assets/evolutions/${file}.png`; return image; };
+  const evolutionAtlases = {
+    jao: { 1: loadEvolutionAtlas('jao-stage1'), 2: loadEvolutionAtlas('jao-stage2') },
+    gui: { 1: loadEvolutionAtlas('gui-stage1'), 2: loadEvolutionAtlas('gui-stage2') },
+    alice: {
+      poison: { 1: loadEvolutionAtlas('alice-poison-stage1'), 2: loadEvolutionAtlas('alice-poison-stage2') },
+      slow: { 1: loadEvolutionAtlas('alice-slow-stage1'), 2: loadEvolutionAtlas('alice-slow-stage2') },
+      lifesteal: { 1: loadEvolutionAtlas('alice-lifesteal-stage1'), 2: loadEvolutionAtlas('alice-lifesteal-stage2') },
+      charm: { 1: loadEvolutionAtlas('alice-charm-stage1'), 2: loadEvolutionAtlas('alice-charm-stage2') }
+    }
+  };
   const enemySprites = {};
   for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
   const toastSprite = new Image();
@@ -968,7 +979,15 @@
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-    if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
+    const stage = player.character === 'jao' ? player.jaoEvolution : player.character === 'alice' ? player.aliceEvolution : player.guiEvolution;
+    const evolvedAtlas = player.character === 'alice'
+      ? evolutionAtlases.alice[player.aliceEvolutionPath]?.[stage]
+      : evolutionAtlases[player.character]?.[stage];
+    if (evolvedAtlas?.complete && evolvedAtlas.naturalWidth) {
+      const cell=evolvedAtlas.naturalWidth/4,rowH=evolvedAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;
+      ctx.drawImage(evolvedAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);
+    }
+    else if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
