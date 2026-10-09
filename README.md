@@ -20,5 +20,5 @@ Baixe o ZIP do repositório, extraia e abra `index.html` no navegador. Também p
 ## Estado deste protótipo
 
 Jão, Alice e Gui usam sprite sheets locais com quatro direções. Os inimigos usam as concepts aprovadas em `assets/enemy-*.png` (gosma, pombo-morcego, cães das sombras, baratas e Rei do Poste); cenário, projéteis e efeitos são desenhados em Canvas. `ASSET-CREDITS.md` lista as artes do projeto e pacotes públicos avaliados.
-- Alice escolhe uma evolução de esmalte no nível 16 (veneno, lentidão, roubo de vida ou vulnerabilidade) e uma especialização no nível 36. As evoluções alteram os efeitos dos arranhões e o visual dela durante a partida.
+- Alice escolhe uma evolução de esmalte no nível 16 (veneno, lentidão, roubo de vida ou vulnerabilidade) e uma especialização no nível 36. As evoluções alteram os efeitos dos arranhões; os efeitos de aura foram removidos enquanto o redesign dos sprites é validado.
 - Gui escolhe no nível 16 entre cartas mais fortes de perto, ricochetes ou um Trunfo Premiado; no nível 36, especializa o caminho em uma das três formas finais.

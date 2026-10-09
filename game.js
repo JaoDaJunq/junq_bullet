@@ -966,71 +966,12 @@
     }
     ctx.restore();
   }
-  function drawJaoEvolution(x, y) {
-    const stage = player.jaoEvolution, colors = { trail: '#58e4ff', chain: '#ffe078', charge: '#bb91ff' }, color = colors[player.jaoEvolutionPath] || '#58e4ff';
-    const pulse = .75 + Math.sin(elapsed * (stage === 2 ? 6 : 4)) * .12;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
-    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2 : 1.5;
-    ctx.beginPath(); ctx.ellipse(x, y - 31, 23 + stage * 3, 39 + stage * 4, 0, .18, Math.PI * 1.78); ctx.stroke();
-    ctx.globalAlpha *= .82; ctx.strokeStyle = '#efffff'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(x - 7, y - 48); ctx.lineTo(x - 1, y - 43); ctx.lineTo(x - 5, y - 37); ctx.lineTo(x + 4, y - 40); ctx.lineTo(x + 1, y - 34); ctx.lineTo(x + 8, y - 31); ctx.stroke();
-    const bolt = (bx, by, flip = 1, scale = 1) => {
-      ctx.save(); ctx.translate(bx, by); ctx.scale(flip * scale, scale); ctx.beginPath(); ctx.moveTo(0, -8); ctx.lineTo(4, -2); ctx.lineTo(1, 0); ctx.lineTo(5, 7); ctx.stroke(); ctx.restore();
-    };
-    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.2 : 1.6;
-    bolt(x - 20, y - 38, 1, .8); bolt(x + 20, y - 38, -1, .8);
-    if (stage === 2) { ctx.globalAlpha = .72; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 29, 31, 49, 0, -1.9, .9); ctx.stroke(); bolt(x - 27, y - 20, 1, 1.1); bolt(x + 27, y - 20, -1, 1.1); }
-    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  }
-  function drawAliceEvolution(x, y) {
-    const stage = player.aliceEvolution;
-    const colors = { poison: '#82e978', slow: '#6dd4ff', lifesteal: '#ff637a', charm: '#ff82ce' };
-    const color = colors[player.aliceEvolutionPath] || '#ff82ce';
-    const pulse = .72 + Math.sin(elapsed * (stage === 2 ? 5.2 : 3.6)) * .12;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
-    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.2 : 1.5;
-    ctx.beginPath(); ctx.ellipse(x, y - 27, 24 + stage * 3, 37 + stage * 4, 0, -.15, Math.PI * 1.72); ctx.stroke();
-    ctx.globalAlpha *= .8; ctx.strokeStyle = '#fff1fa'; ctx.lineWidth = 1.4;
-    ctx.beginPath(); ctx.moveTo(x - 8, y - 39); ctx.lineTo(x - 3, y - 45); ctx.lineTo(x + 2, y - 39); ctx.lineTo(x + 8, y - 45); ctx.stroke();
-    for (let i = 0; i < stage + 1; i++) {
-      const a = elapsed * (stage === 2 ? .8 : .5) + i * Math.PI * 2 / (stage + 1);
-      const sx = x + Math.cos(a) * (26 + stage * 4), sy = y - 29 + Math.sin(a) * (18 + stage * 3);
-      ctx.fillStyle = color; ctx.globalAlpha = pulse * .8; ctx.beginPath(); ctx.arc(sx, sy, stage === 2 ? 2.4 : 1.8, 0, Math.PI * 2); ctx.fill();
-    }
-    if (stage === 2) { ctx.globalAlpha = .62; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 28, 33, 48, 0, 1.2, 4.9); ctx.stroke(); }
-    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  }
-  function drawGuiEvolution(x, y) {
-    const stage = player.guiEvolution;
-    const colors = { close: '#ff9b47', ricochet: '#74e7ff', trump: '#ffd16b' };
-    const color = colors[player.guiEvolutionPath] || '#ffd16b';
-    const pulse = .74 + Math.sin(elapsed * (stage === 2 ? 5.4 : 3.8)) * .12;
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
-    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.1 : 1.5;
-    ctx.beginPath(); ctx.ellipse(x, y - 26, 24 + stage * 4, 35 + stage * 5, 0, -.2, Math.PI * 1.7); ctx.stroke();
-    ctx.globalAlpha *= .8; ctx.strokeStyle = '#fff4da'; ctx.lineWidth = 1.3;
-    ctx.beginPath(); ctx.moveTo(x - 7, y - 40); ctx.lineTo(x, y - 46); ctx.lineTo(x + 7, y - 40); ctx.stroke();
-    const count = stage === 2 ? 3 : 1;
-    for (let i = 0; i < count; i++) {
-      const a = elapsed * (stage === 2 ? .9 : .6) + i * Math.PI * 2 / count;
-      const cx = x + Math.cos(a) * (27 + stage * 4), cy = y - 27 + Math.sin(a) * (19 + stage * 3);
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(a) * .18);
-      ctx.globalAlpha = pulse * .88; ctx.fillStyle = '#15202c'; ctx.strokeStyle = color; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(-3, -5); ctx.lineTo(3, -5); ctx.lineTo(4, 4); ctx.lineTo(0, 6); ctx.lineTo(-4, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.strokeStyle = '#fff2ce'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-1.5, -2); ctx.lineTo(1.5, 2); ctx.moveTo(1.5, -2); ctx.lineTo(-1.5, 2); ctx.stroke(); ctx.restore();
-    }
-    if (stage === 2) { ctx.globalAlpha = .58; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, y - 27, 34, 47, 0, 1.1, 4.8); ctx.stroke(); }
-    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
-  }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
-    if (player.character === 'jao' && player.jaoEvolution > 0) drawJaoEvolution(sx, sy);
-    if (player.character === 'alice' && player.aliceEvolution > 0) drawAliceEvolution(sx, sy);
-    if (player.character === 'gui' && player.guiEvolution > 0) drawGuiEvolution(sx, sy);
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }
   }
