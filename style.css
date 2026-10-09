@@ -90,3 +90,6 @@
 .evolution-four .upgrade-card{min-height:218px;padding:16px 13px}
 .evolution-four .upgrade-card p{font-size:11px}
 @media(max-width:650px){.cards.evolution-four{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.evolution-four .upgrade-card{min-height:184px;padding:11px 9px}.evolution-four .upgrade-card p{font-size:10px}}
+
+/* Controles touch mais acessíveis para jogar sem esticar o polegar. */
+@media(pointer:coarse){.joystick{left:clamp(78px,24vw,165px);bottom:max(34px,calc(env(safe-area-inset-bottom) + 24px))}}
