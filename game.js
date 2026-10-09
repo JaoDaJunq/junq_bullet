@@ -54,7 +54,7 @@
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
   let jaoTrailTimer = 0;
-  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
@@ -113,7 +113,7 @@
     elapsed = 0; kills = 0; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 110, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
@@ -193,13 +193,16 @@
       player.aimX = aimX; player.aimY = aimY;
     }
     const center = Math.atan2(aimY, aimX), count = options.count ?? 3, spread = options.spread ?? .52;
-    const sharedHits = new Set(), speed = options.speed || player.shotSpeed, damage = player.damage * (options.damageScale ?? .30);
+    const sharedHits = new Set(), speed = options.speed || player.shotSpeed;
+    const damageScale = options.damageScale ?? (options.ultimate ? 1.15 : .30);
+    const evolutionScale = options.ultimate ? 1 + player.guiUltimateDamageBonus : 1 + player.guiCardDamageBonus;
+    const damage = player.damage * damageScale * evolutionScale;
     for (let i = 0; i < count; i++) {
       const angle = center + (count === 1 ? 0 : (i / (count - 1) - .5) * spread);
       const cardColor = options.ultimate ? (i % 2 ? '#ffd16b' : '#fff0ce') : (i % 2 ? '#f25566' : '#f4ead0');
       bullets.push({ x: player.x + aimX * 15, y: player.y + aimY * 15, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
         damage, life: options.life ?? (options.ultimate ? 1.4 : .62), color: cardColor, card: true, ultimate: !!options.ultimate, stun: options.stun || 0,
-        r: options.ultimate ? 8 : 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: options.pierce ?? player.pierce, hitEnemies: options.ultimate ? sharedHits : new Set() });
+        r: options.ultimate ? 8 : 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: options.pierce ?? player.pierce, hitEnemies: options.ultimate ? sharedHits : new Set(), guiBouncesLeft: options.ultimate ? 0 : player.guiRicochets });
     }
     player.shotFlash = options.ultimate ? .42 : .14;
     emit(player.x + aimX * 18, player.y + aimY * 18, options.ultimate ? '#ffd16b' : '#fff0ce', options.ultimate ? 30 : 6, options.ultimate ? 1.25 : .45);
@@ -218,7 +221,7 @@
     }
     if (player.character === 'gui') {
       const target = nearestEnemy();
-      fireCardVolley(target, { allowNoTarget: true, count: 13, spread: 1.92, speed: player.shotSpeed * 1.18, damageScale: 1.15, life: 1.4, pierce: 99, stun: .9, ultimate: true });
+      fireCardVolley(target, { allowNoTarget: true, count: 13 + player.guiUltimateCardBonus, spread: 1.92 + player.guiUltimateSpread, speed: player.shotSpeed * 1.18, damageScale: 1.15, life: 1.4, pierce: 99, stun: .9 + player.guiUltimateStunBonus, ultimate: true });
       const angle = Math.atan2(player.aimY, player.aimX); startUltimateCooldown();
       ultimateVfx = { x: player.x, y: player.y, radius: 330, spread: 1.92, angle, life: .62, max: .62, targets: [], color: '#ffd16b', type: 'cardFan' };
       emit(player.x, player.y, '#ffd16b', 28, 1.5); floatText(player.x, player.y - 46, 'MÃO DE TRUNFO!', '#ffe39a');
@@ -395,6 +398,53 @@
     };
     return branches[player.aliceEvolutionPath] || [];
   }
+  function guiEvolutionChoices(tier) {
+    const choice = (id, icon, title, desc, color, apply) => ({ id, icon, title, desc, color, rarity: 'legendary', category: `EVOLUÇÃO ${tier === 16 ? 'I' : 'II'}`, evolution: tier, apply });
+    if (tier === 16) return [
+      choice('close-range', '▣', 'Doze de Baralho', 'As cartas causam mais dano quando acertam inimigos bem de perto, mantendo o cone curto.', '#ff9b47', () => {
+        player.guiEvolutionPath = 'close'; player.guiEvolution = 1; player.guiCloseDamageBonus = .3; player.guiCloseRange = 135;
+      }),
+      choice('ricochet', '↗', 'Cartas Ricochete', 'Cada carta básica que acerta pode saltar para mais um inimigo próximo.', '#74e7ff', () => {
+        player.guiEvolutionPath = 'ricochet'; player.guiEvolution = 1; player.guiRicochets = 1;
+      }),
+      choice('trump', '♛', 'Trunfo Premiado', 'Suas cartas ganham força e a Mão de Trunfo dispara ainda mais cartas.', '#ffd16b', () => {
+        player.guiEvolutionPath = 'trump'; player.guiEvolution = 1; player.guiCardDamageBonus = .15; player.guiUltimateCardBonus = 4;
+      })
+    ];
+    const finish = (id, icon, title, desc, color, apply) => choice(id, icon, title, desc, color, () => {
+      apply(); player.guiEvolution = 2; player.guiEvolutionFinal = id;
+    });
+    const branches = {
+      close: [
+        finish('heavy-hand', '▣', 'Mão Pesada', 'Aumenta ainda mais o dano das cartas a curtíssima distância.', '#ff9b47', () => { player.guiCloseDamageBonus += .4; }),
+        finish('knockout', '✹', 'Nocaute no Baralho', 'Cartas que acertam de perto também atordoam o alvo.', '#ffbd67', () => { player.guiCloseStun = .28; }),
+        finish('close-range', '➤', 'Alcance de Braço', 'A zona de dano máximo fica maior e você recebe 10% de velocidade.', '#ffd58a', () => { player.guiCloseRange += 65; player.speed *= 1.1; })
+      ],
+      ricochet: [
+        finish('chain-deck', '↗', 'Embaralhamento Selvagem', 'Cada carta pode ricochetear em até dois inimigos adicionais.', '#74e7ff', () => { player.guiRicochets += 2; }),
+        finish('sharp-edges', '✦', 'Bordas Afiadas', 'Os ricochetes perdem menos dano ao saltar.', '#a5f2ff', () => { player.guiRicochetDamage += .22; }),
+        finish('long-bounce', '⌁', 'Salto de Mestre', 'As cartas ricocheteiam entre alvos mais distantes.', '#8bdcff', () => { player.guiRicochetRange += 90; })
+      ],
+      trump: [
+        finish('full-house', '♛', 'Mão Cheia', 'A Mão de Trunfo lança mais seis cartas no leque.', '#ffd16b', () => { player.guiUltimateCardBonus += 6; }),
+        finish('royal-flush', '♠', 'Flush Real', 'A ultimate causa mais dano e mantém os inimigos atordoados por mais tempo.', '#ffe6a0', () => { player.guiUltimateDamageBonus += .35; player.guiUltimateStunBonus += .45; }),
+        finish('quick-shuffle', '⟳', 'Embaralha Rápido', 'A ultimate recarrega 18% mais rápido; suas cartas básicas ficam 10% mais fortes.', '#ffbd67', () => { player.ultMax *= .82; player.guiCardDamageBonus += .1; })
+      ]
+    };
+    return branches[player.guiEvolutionPath] || [];
+  }
+  function ricochetGuiCard(bullet, hitEnemy) {
+    if (player.character !== 'gui' || player.guiEvolutionPath !== 'ricochet' || bullet.ultimate || bullet.guiBouncesLeft <= 0) return;
+    const next = enemies.filter(enemy => enemy !== hitEnemy && enemy.hp > 0 && !bullet.hitEnemies.has(enemy) && dist2(hitEnemy, enemy) <= player.guiRicochetRange ** 2)
+      .sort((a, b) => dist2(hitEnemy, a) - dist2(hitEnemy, b))[0];
+    if (!next) return;
+    const dx = next.x - hitEnemy.x, dy = next.y - hitEnemy.y, length = Math.hypot(dx, dy) || 1;
+    const hitEnemies = new Set(bullet.hitEnemies);
+    bullets.push({ x: hitEnemy.x, y: hitEnemy.y, vx: dx / length * player.shotSpeed * 1.08, vy: dy / length * player.shotSpeed * 1.08,
+      damage: bullet.damage * player.guiRicochetDamage, life: 1.05, color: '#8cecff', card: true, ultimate: false, stun: 0,
+      r: 6, age: 0, trail: [], phase: rand(0, 6.28), pierce: 0, hitEnemies, guiBouncesLeft: bullet.guiBouncesLeft - 1 });
+    emit(hitEnemy.x, hitEnemy.y, '#8cecff', 3, .35);
+  }
   function addXp(value) { player.xp += Math.round(value * player.xpGain); if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
   const upgrades = [
     { id: 'rapid', rarity: 'rare', icon: '⚡', category: 'COMBATE', title: 'Gatilho rápido', desc: 'Atira 18% mais rápido.', apply: () => player.fireRate = Math.max(.16, player.fireRate * .82) },
@@ -421,20 +471,24 @@
     const evolutionLevel = player.character === 'jao' && player.level === 16 && player.jaoEvolution === 0 ? 16 :
       player.character === 'jao' && player.level === 36 && player.jaoEvolution === 1 ? 36 :
       player.character === 'alice' && player.level === 16 && player.aliceEvolution === 0 ? 16 :
-      player.character === 'alice' && player.level === 36 && player.aliceEvolution === 1 ? 36 : 0;
-    const isAlice = player.character === 'alice';
-    currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
+      player.character === 'alice' && player.level === 36 && player.aliceEvolution === 1 ? 36 :
+      player.character === 'gui' && player.level === 16 && player.guiEvolution === 0 ? 16 :
+      player.character === 'gui' && player.level === 36 && player.guiEvolution === 1 ? 36 : 0;
+    const isAlice = player.character === 'alice', isGui = player.character === 'gui';
+    currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : isGui ? guiEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
     ui.options.classList.toggle('evolution-four', isAlice && evolutionLevel === 16);
     if (evolutionLevel) {
       const pathNames = isAlice
         ? { poison: 'JARDIM TÓXICO', slow: 'ESMALTE GLACIAL', lifesteal: 'VERMELHO VAMPÍRICO', charm: 'ROSA HIPNÓTICO' }
-        : { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
-      const selectedPath = isAlice ? player.aliceEvolutionPath : player.jaoEvolutionPath;
-      ui.upgradeEyebrow.textContent = evolutionLevel === 16 ? `NÍVEL 16 · EVOLUÇÃO ${isAlice ? 'DA ALICE' : 'DO JÃO'}` : `NÍVEL 36 · ${pathNames[selectedPath] || 'FORMA FINAL'}`;
-      ui.upgradeTitle.textContent = evolutionLevel === 16 ? (isAlice ? 'Escolhe teu esmalte supremo.' : 'Escolhe teu caminho elétrico.') : 'Desperta a forma final.';
+        : isGui ? { close: 'DOZE DE BARALHO', ricochet: 'CARTAS RICOCHETE', trump: 'TRUNFO PREMIADO' }
+          : { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
+      const selectedPath = isAlice ? player.aliceEvolutionPath : isGui ? player.guiEvolutionPath : player.jaoEvolutionPath;
+      const characterName = isAlice ? 'DA ALICE' : isGui ? 'DO GUI' : 'DO JÃO';
+      ui.upgradeEyebrow.textContent = evolutionLevel === 16 ? `NÍVEL 16 · EVOLUÇÃO ${characterName}` : `NÍVEL 36 · ${pathNames[selectedPath] || 'FORMA FINAL'}`;
+      ui.upgradeTitle.textContent = evolutionLevel === 16 ? (isAlice ? 'Escolhe teu esmalte supremo.' : isGui ? 'Escolhe como vai dominar o baralho.' : 'Escolhe teu caminho elétrico.') : 'Desperta a forma final.';
       ui.upgradeHint.textContent = evolutionLevel === 16
-        ? (isAlice ? 'Escolhe uma cor para evoluir. O esmalte reforça uma habilidade e muda o visual da Alice.' : 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do Jão.')
-        : `Escolhe como evoluir o caminho que tu abriu no nível 16. ${isAlice ? 'O esmalte escolhido define as três opções.' : 'Cada rota tem uma forma final.'}`;
+        ? (isAlice ? 'Escolhe uma cor para evoluir. O esmalte reforça uma habilidade e muda o visual da Alice.' : isGui ? 'Escolhe uma rota: cartas mais fortes de perto, ricochetes ou uma Mão de Trunfo ainda maior.' : 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do Jão.')
+        : `Escolhe como evoluir o caminho que tu abriu no nível 16. ${isAlice ? 'O esmalte escolhido define as três opções.' : isGui ? 'Cada estilo de baralho tem três formas finais.' : 'Cada rota tem uma forma final.'}`;
     } else {
       const remaining = [...upgrades];
       while (currentChoices.length < 3 && remaining.length) {
@@ -456,7 +510,7 @@
       b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
     });
   }
-  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
+  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : player.character === 'gui' ? 'Gui' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   const chestDrops = [
     { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
@@ -551,9 +605,12 @@
         b.hitEnemies.add(e);
         const critical = Math.random() < player.critChance, vulnerable = vulnerabilityMultiplier(e);
         const slowBonus = player.character === 'alice' && player.aliceEvolutionPath === 'slow' && e.slowTimer > 0 ? player.aliceSlowDamageBonus : 1;
-        const damage = b.damage * (critical ? 2 : 1) * vulnerable * slowBonus;
+        const closeRange = player.character === 'gui' && player.guiEvolutionPath === 'close' && b.card && !b.ultimate && dist2(player, e) <= player.guiCloseRange ** 2;
+        const closeBonus = closeRange ? 1 + player.guiCloseDamageBonus : 1;
+        const damage = b.damage * (critical ? 2 : 1) * vulnerable * slowBonus * closeBonus;
         e.hp -= damage; e.hit = .12;
-        if (b.stun) { e.stun = Math.max(e.stun || 0, b.stun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); }
+        if (b.stun || (closeRange && player.guiCloseStun > 0)) { e.stun = Math.max(e.stun || 0, b.stun || player.guiCloseStun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); }
+        if (player.character === 'gui') ricochetGuiCard(b, e);
         applyNailEffect(e, b.element, damage); emit(b.x, b.y, b.color, 6, .62);
         floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : b.card ? '#ffe4a1' : '#bdf4ff');
         if (b.basic && player.character === 'jao' && !b.chainTriggered) { b.chainTriggered = true; chainShock(e, damage); }
@@ -852,6 +909,28 @@
     if (stage === 2) { ctx.globalAlpha = .62; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.ellipse(x, y - 28, 33, 48, 0, 1.2, 4.9); ctx.stroke(); }
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  function drawGuiEvolution(x, y) {
+    const stage = player.guiEvolution;
+    const colors = { close: '#ff9b47', ricochet: '#74e7ff', trump: '#ffd16b' };
+    const color = colors[player.guiEvolutionPath] || '#ffd16b';
+    const pulse = .74 + Math.sin(elapsed * (stage === 2 ? 5.4 : 3.8)) * .12;
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = pulse;
+    ctx.strokeStyle = color; ctx.lineWidth = stage === 2 ? 2.1 : 1.5;
+    ctx.beginPath(); ctx.ellipse(x, y - 26, 24 + stage * 4, 35 + stage * 5, 0, -.2, Math.PI * 1.7); ctx.stroke();
+    ctx.globalAlpha *= .8; ctx.strokeStyle = '#fff4da'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(x - 7, y - 40); ctx.lineTo(x, y - 46); ctx.lineTo(x + 7, y - 40); ctx.stroke();
+    const count = stage === 2 ? 3 : 1;
+    for (let i = 0; i < count; i++) {
+      const a = elapsed * (stage === 2 ? .9 : .6) + i * Math.PI * 2 / count;
+      const cx = x + Math.cos(a) * (27 + stage * 4), cy = y - 27 + Math.sin(a) * (19 + stage * 3);
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(a) * .18);
+      ctx.globalAlpha = pulse * .88; ctx.fillStyle = '#15202c'; ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(-3, -5); ctx.lineTo(3, -5); ctx.lineTo(4, 4); ctx.lineTo(0, 6); ctx.lineTo(-4, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#fff2ce'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-1.5, -2); ctx.lineTo(1.5, 2); ctx.moveTo(1.5, -2); ctx.lineTo(-1.5, 2); ctx.stroke(); ctx.restore();
+    }
+    if (stage === 2) { ctx.globalAlpha = .58; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(x, y - 27, 34, 47, 0, 1.1, 4.8); ctx.stroke(); }
+    ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
     if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
@@ -860,6 +939,7 @@
     else {ctx.fillStyle='#191c25';ctx.beginPath();ctx.arc(sx,sy,16,0,Math.PI*2);ctx.fill();ctx.fillStyle='#dd365f';ctx.fillRect(sx-10,sy-12,20,22);ctx.fillStyle='#f2dec0';ctx.fillRect(sx-10,sy-8,5,15);ctx.fillRect(sx+5,sy-8,5,15);ctx.fillStyle='#111';ctx.fillRect(sx-7,sy-17,14,8);ctx.fillStyle='#48cfff';ctx.fillRect(sx+5,sy-17,3,3);}
     if (player.character === 'jao' && player.jaoEvolution > 0) drawJaoEvolution(sx, sy);
     if (player.character === 'alice' && player.aliceEvolution > 0) drawAliceEvolution(sx, sy);
+    if (player.character === 'gui' && player.guiEvolution > 0) drawGuiEvolution(sx, sy);
     if(player.invuln>0 && Math.floor(elapsed*18)%2===0){ctx.strokeStyle='#ff8391';ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.stroke();}
     const target = nearestEnemy(); for (const c of companions) { const world = petWorldPosition(c), p = screenPos(world); drawPet(c, p.x, p.y, target, world); }
   }
