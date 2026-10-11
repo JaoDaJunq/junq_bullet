@@ -65,7 +65,7 @@
   const caetanoAtlas = new Image();
   caetanoAtlas.src = 'assets/caetano-walk.png';
   const thalysAtlas = new Image();
-  thalysAtlas.src = 'assets/thalys-walk.png?v=one-arm-tattoo-20261011';
+  thalysAtlas.src = 'assets/thalys-walk.png?v=light-skin-blue-eyes-20261011';
   const loadEvolutionAtlas = (file) => { const image = new Image(); image.src = `assets/evolutions/${file}.png`; return image; };
   const evolutionAtlases = {
     jao: { 1: loadEvolutionAtlas('jao-stage1'), 2: loadEvolutionAtlas('jao-stage2') },
