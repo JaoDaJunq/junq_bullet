@@ -1020,23 +1020,21 @@
   }
   function drawVolleyBallAt(x, y, radius, rotation = 0) {
     ctx.save(); ctx.translate(x, y); ctx.rotate(rotation); ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#f4ed00'; ctx.strokeStyle = '#17202b'; ctx.lineWidth = Math.max(1, radius * .16);
+    ctx.fillStyle = '#f4ed00'; ctx.strokeStyle = '#17202b'; ctx.lineWidth = Math.max(1, radius * .17);
     ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#101216';
+    ctx.lineCap = 'round'; ctx.lineWidth = Math.max(2, radius * .32); ctx.strokeStyle = '#101216';
     for (let i = 0; i < 3; i++) {
-      const a = rotation + i * Math.PI * 2 / 3, spread = .43;
+      const a = i * Math.PI * 2 / 3 + .2;
       ctx.beginPath();
-      ctx.moveTo(Math.cos(a - spread) * radius * .96, Math.sin(a - spread) * radius * .96);
-      ctx.quadraticCurveTo(Math.cos(a - .2) * radius * .43, Math.sin(a - .2) * radius * .43, Math.cos(a + .12) * radius * .16, Math.sin(a + .12) * radius * .16);
-      ctx.quadraticCurveTo(Math.cos(a + .4) * radius * .48, Math.sin(a + .4) * radius * .48, Math.cos(a + spread) * radius * .96, Math.sin(a + spread) * radius * .96);
-      ctx.quadraticCurveTo(Math.cos(a + .72) * radius * .94, Math.sin(a + .72) * radius * .94, Math.cos(a - .72) * radius * .94, Math.sin(a - .72) * radius * .94);
-      ctx.closePath(); ctx.fill();
+      ctx.moveTo(Math.cos(a - .68) * radius * .83, Math.sin(a - .68) * radius * .83);
+      ctx.quadraticCurveTo(Math.cos(a) * radius * .43, Math.sin(a) * radius * .43, Math.cos(a + .68) * radius * .83, Math.sin(a + .68) * radius * .83);
+      ctx.stroke();
     }
-    ctx.lineWidth = Math.max(.65, radius * .09); ctx.strokeStyle = '#fff45a';
+    ctx.lineCap = 'round'; ctx.lineWidth = Math.max(.7, radius * .09); ctx.strokeStyle = '#fff882';
     for (let i = 0; i < 3; i++) {
-      const a = rotation + i * Math.PI * 2 / 3;
-      ctx.beginPath(); ctx.moveTo(Math.cos(a + .48) * radius * .94, Math.sin(a + .48) * radius * .94);
-      ctx.quadraticCurveTo(Math.cos(a + .78) * radius * .72, Math.sin(a + .78) * radius * .72, Math.cos(a + .98) * radius * .38, Math.sin(a + .98) * radius * .38); ctx.stroke();
+      const a = i * Math.PI * 2 / 3 + 1.16;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a - .32) * radius * .92, Math.sin(a - .32) * radius * .92);
+      ctx.quadraticCurveTo(Math.cos(a) * radius * .69, Math.sin(a) * radius * .69, Math.cos(a + .32) * radius * .92, Math.sin(a + .32) * radius * .92); ctx.stroke();
     }
     ctx.restore();
   }
