@@ -169,3 +169,16 @@
  .jao-illustrated .card-symbol{width:30px;height:30px;margin:7px 0;font-size:18px}
  .jao-illustrated h3{font-size:11px}.jao-illustrated p{font-size:9px}
 }
+
+
+/* Character selection concept posters */
+.character-card .character-art{height:218px;margin-bottom:4px;background-color:#111823;background-position:center 27%;background-size:cover;image-rendering:auto}
+#character-jao .character-art-jao{height:222px;background-image:url('assets/jao-selection-poster.webp?v=character-art-20261011');background-position:center 31%;background-size:cover;image-rendering:auto;border-color:#58dfff70;box-shadow:inset 0 0 25px #42cfff16,0 5px 18px #0008}
+#character-alice .character-art-alice{background-image:url('assets/alice-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#ff79c870}
+#character-gui{--char-accent:#ffc46a}
+#character-gui .character-art-gui{background-image:url('assets/gui-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#ffc46a70}
+#character-caetano{--char-accent:#63d9ff}
+#character-caetano .character-art-caetano{background-image:url('assets/caetano-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#63d9ff70}
+#character-thalys{--char-accent:#83e765}
+#character-thalys .character-art-thalys{background-image:url('assets/thalys-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#83e76570}
+@media(max-width:650px){.character-card .character-art{height:194px}#character-jao .character-art-jao{height:207px}}
