@@ -275,7 +275,7 @@
     for (let i = 0; i < player.multishot; i++) {
       const angle = aim + (i - (player.multishot - 1) / 2) * .13, speed = player.shotSpeed;
       const turnDistance = clamp(len + 80, 220, 430);
-      bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 3, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true, turnDistance, travelDistance: 0, returning: false, hitCount: 0, maxHits: 3 + player.thalysBallPierce });
+      bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 3, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true, turnDistance, travelDistance: 0, returning: false, hitCount: 0, maxHits: 1 + player.thalysBallPierce });
     }
     emit(player.x + player.aimX * 14, player.y + player.aimY * 14, '#fff0b3', 5, .5); sound(390, .065, 'triangle', .035);
     return true;
