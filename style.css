@@ -178,7 +178,7 @@
 #character-gui{--char-accent:#ffc46a}
 #character-gui .character-art-gui{background-image:url('assets/gui-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#ffc46a70}
 #character-caetano{--char-accent:#63d9ff}
-#character-caetano .character-art-caetano{background-image:url('assets/caetano-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#63d9ff70}
+#character-caetano .character-art-caetano{background-image:url('assets/caetano-selection-poster-final.webp?v=20261011b');background-position:center 25%;border-color:#63d9ff70}
 #character-thalys{--char-accent:#83e765}
 #character-thalys .character-art-thalys{background-image:url('assets/thalys-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#83e76570}
 @media(max-width:650px){.character-card .character-art{height:194px}#character-jao .character-art-jao{height:207px}}
