@@ -120,3 +120,52 @@
 .desktop-ultimate.thalys-ultimate{border-color:#ffe08a80;box-shadow:0 8px 24px #0009,0 0 20px #ffcf6130}
 .desktop-ultimate.thalys-ultimate .desktop-ultimate-icon{border-color:#fff0b3;background:linear-gradient(145deg,#a66f22,#785322)}
 .desktop-ultimate.thalys-ultimate .desktop-ultimate-meter i{background:linear-gradient(90deg,#dc9e34,#ffe08a)}
+
+/* Jão: pôster de lutador na seleção e árvore visual para os níveis 10 e 20. */
+.character-panel{width:min(1120px,calc(100vw - 28px));max-height:calc(100dvh - 24px);overflow:auto}
+.character-grid{display:flex;align-items:stretch;gap:14px;overflow-x:auto;padding:8px 8px 18px;scroll-snap-type:x mandatory;scrollbar-color:#55d4ff66 #ffffff10;scrollbar-width:thin}
+.character-card{flex:0 0 166px;min-height:354px;align-items:center;scroll-snap-align:start;background:linear-gradient(160deg,#171f2ceF,#090e16);text-align:center}
+#character-jao{flex-basis:224px;border-color:#58dfff;background:linear-gradient(180deg,#14213c,#080d15 80%);box-shadow:0 0 22px #35cfff38,5px 5px 0 #071018}
+.character-card .character-art{width:100%;height:148px;margin:0 0 3px;background-position:center;background-repeat:no-repeat;background-size:cover;border:1px solid #ffffff1a;border-radius:3px;image-rendering:pixelated}
+#character-jao .character-art-jao{height:222px;background-image:url('assets/jao-selection-poster.webp?v=poster-tree-20261011');background-position:center 50%;background-size:cover;image-rendering:auto;border-color:#58dfff70;box-shadow:inset 0 0 25px #42cfff16,0 5px 18px #0008}
+.character-card .character-name{font-size:19px}
+.character-card .character-description{min-height:78px;font-size:10px;line-height:1.45}
+#character-jao .character-name{text-shadow:0 0 14px #42cfff88}
+.character-card.selected{transform:translateY(-4px)}
+#upgrade-panel.jao-evolution-open{width:min(1080px,calc(100vw - 28px));max-height:calc(100dvh - 20px);overflow-y:auto;padding:26px 30px}
+.jao-evolution-track{margin:18px 0 0;padding:12px 14px 15px;border:1px solid #6bdcff42;background:linear-gradient(145deg,#0b1624,#0a111a);box-shadow:inset 0 0 24px #1d73a522}
+.jao-track-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#dff9ff}
+.jao-track-heading b{font-size:10px;letter-spacing:.18em}
+.jao-track-heading span{color:#71ddff;font-size:9px;font-weight:900;letter-spacing:.1em;text-align:right}
+.jao-track-routes{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:15px}
+.jao-track-routes:before{content:"";position:absolute;top:0;left:16.6%;right:16.6%;height:1px;background:linear-gradient(90deg,#53defd88,#ffffff26,#b783ff88)}
+.jao-track-route{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;min-height:39px;padding:8px 6px;border:1px solid #ffffff20;background:#ffffff06;color:#8798aa;font-size:8px;font-weight:950;letter-spacing:.06em;text-align:center}
+.jao-track-route:before{content:"";position:absolute;top:-16px;left:50%;height:15px;border-left:1px solid #62dcff80}
+.jao-track-route.is-selected{border-color:#66e1ff;background:#35cfff19;color:#e8fbff;box-shadow:0 0 16px #35cfff2b}
+.jao-evolution-track[data-tier="10"] .jao-track-route{color:#e8f7ff}
+.jao-evolution-track[data-tier="20"] .jao-track-route:not(.is-selected){opacity:.42}
+.jao-route-icon{font-size:16px;color:#66e1ff}
+.jao-track-route[data-jao-path="chain"] .jao-route-icon{color:#ffe174}
+.jao-track-route[data-jao-path="charge"] .jao-route-icon{color:#c49aff}
+.jao-evolution-options{margin-top:14px}
+.jao-illustrated{min-height:274px!important;padding-top:17px}
+.jao-card-art{position:absolute;inset:0 0 auto;height:166px;background-image:var(--jao-art-image);background-size:contain;background-position:right 8px top 8px;background-repeat:no-repeat;opacity:.92;mask-image:linear-gradient(to bottom,#000 0%,#000 52%,transparent 100%);pointer-events:none}
+.jao-illustrated .card-kicker{position:relative;margin-top:14px}
+.jao-illustrated .card-symbol{margin:12px 0 8px;background:#101a27d9}
+.jao-illustrated h3,.jao-illustrated p,.jao-illustrated .card-rarity,.jao-illustrated .card-key,.jao-illustrated .card-pick{position:relative}
+.jao-illustrated h3{margin-top:2px;text-shadow:0 2px 6px #05080e}
+.jao-illustrated p{max-width:none;text-shadow:0 1px 5px #05080e}
+@media(max-width:650px){
+ .character-panel{padding:22px 14px 18px}.character-grid{gap:10px}.character-card{flex-basis:150px;min-height:340px;padding:10px 9px}
+ #character-jao{flex-basis:204px}.character-card .character-art{height:136px}
+ #character-jao .character-art-jao{height:207px}.character-card .character-description{font-size:9px}
+ #upgrade-panel.jao-evolution-open{padding:22px 14px 18px}
+ .jao-evolution-track{padding:10px 8px 12px}.jao-track-heading{align-items:flex-start;flex-direction:column;gap:5px}
+ .jao-track-heading span{text-align:left;font-size:8px}
+ .jao-track-routes{gap:6px}.jao-track-route{flex-direction:column;gap:3px;min-height:54px;padding:6px 3px;font-size:7px;line-height:1.2}
+ .jao-route-icon{font-size:14px}.jao-illustrated{min-height:214px!important;padding:11px 8px}
+ .jao-card-art{height:132px;background-position:center top 5px}
+ .jao-illustrated .card-kicker{margin-top:22px}
+ .jao-illustrated .card-symbol{width:30px;height:30px;margin:7px 0;font-size:18px}
+ .jao-illustrated h3{font-size:11px}.jao-illustrated p{font-size:9px}
+}

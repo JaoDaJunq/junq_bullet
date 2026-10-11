@@ -43,7 +43,7 @@
   const ui = {
     hud: $('hud'), screen: $('screen'), menu: $('menu'), characterSelect: $('character-select'), upgrade: $('upgrade-panel'), pause: $('pause-panel'), over: $('gameover-panel'),
     health: $('health-fill'), healthText: $('health-text'), xp: $('xp-fill'), level: $('level'), timer: $('timer'), kills: $('kills'),
-    options: $('upgrade-options'), upgradeEyebrow: $('upgrade-eyebrow'), upgradeTitle: $('upgrade-title'), upgradeHint: $('upgrade-hint'), joystickPosition: $('joystick-position'), joystickPositionLabel: $('joystick-position-label'), joystickSize: $('joystick-size'), joystickSizeLabel: $('joystick-size-label'), handednessToggle: $('handedness-toggle'), autoUltimateToggle: $('auto-ultimate-toggle'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
+    options: $('upgrade-options'), jaoEvolutionTrack: $('jao-evolution-track'), upgradeEyebrow: $('upgrade-eyebrow'), upgradeTitle: $('upgrade-title'), upgradeHint: $('upgrade-hint'), joystickPosition: $('joystick-position'), joystickPositionLabel: $('joystick-position-label'), joystickSize: $('joystick-size'), joystickSizeLabel: $('joystick-size-label'), handednessToggle: $('handedness-toggle'), autoUltimateToggle: $('auto-ultimate-toggle'), toast: $('toast'), chest: $('chest-status'), chestLabel: $('chest-label'), chestFill: $('chest-fill'),
     pickup: $('pickup-status'), pickupLabel: $('pickup-label'), desktopUlt: $('desktop-ultimate'), desktopUltIcon: $('desktop-ultimate-icon'), desktopUltFill: $('desktop-ult-fill'), desktopUltStatus: $('desktop-ult-status'),
     joystick: $('joystick'), stick: $('stick'), ult: $('ultimate-button'), ultIcon: $('ultimate-icon'), ultLabel: $('ultimate-label'), ultFill: $('ult-fill'), toastUse: $('toast-use'), toastCount: $('toast-count')
   };
@@ -681,6 +681,16 @@
       player.character === 'thalys' && player.level === 20 && player.thalysEvolution === 1 ? 20 : 0;
     const isAlice = player.character === 'alice', isGui = player.character === 'gui', isCaetano = player.character === 'caetano', isThalys = player.character === 'thalys';
     currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : isGui ? guiEvolutionChoices(evolutionLevel) : isCaetano ? caetanoEvolutionChoices(evolutionLevel) : isThalys ? thalysEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
+    const showJaoEvolutionTrack = evolutionLevel > 0 && player.character === 'jao';
+    ui.options.classList.toggle('jao-evolution-options', showJaoEvolutionTrack);
+    ui.upgrade.classList.toggle('jao-evolution-open', showJaoEvolutionTrack);
+    ui.jaoEvolutionTrack.classList.toggle('hidden', !showJaoEvolutionTrack);
+    if (showJaoEvolutionTrack) {
+      ui.jaoEvolutionTrack.dataset.tier = String(evolutionLevel);
+      ui.jaoEvolutionTrack.dataset.path = player.jaoEvolutionPath || '';
+      $('jao-track-status').textContent = evolutionLevel === 10 ? 'NÍVEL 10 · ESCOLHE UM DOS TRÊS CAMINHOS' : 'NÍVEL 20 · ESCOLHE A FORMA FINAL DA ROTA';
+      for (const node of ui.jaoEvolutionTrack.querySelectorAll('[data-jao-path]')) node.classList.toggle('is-selected', node.dataset.jaoPath === player.jaoEvolutionPath);
+    }
     ui.options.classList.toggle('evolution-four', isAlice && evolutionLevel === 10);
     if (evolutionLevel) {
       const pathNames = isAlice
@@ -713,7 +723,11 @@
       if (guaranteed) { b.style.setProperty('--card-accent', u.color); b.style.setProperty('--card-glow', u.color); }
       b.setAttribute('aria-label', guaranteed ? `${u.category}: ${u.title}. ${u.desc}` : `${rarityNames[u.rarity]} (${chance}% por card) · ${i + 1}: ${u.title}. ${u.desc}`);
       const badge = guaranteed ? `EVOLUÇÃO · NV ${u.evolution}` : `${rarityNames[u.rarity]} · ${chance}%`;
-      b.innerHTML = `<span class="card-rarity">${badge}</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`;
+      const jaoArtPath = evolutionLevel && player.character === 'jao' ? (evolutionLevel === 10 ? u.id : player.jaoEvolutionPath) : null;
+      const jaoArtUrl = jaoArtPath ? `assets/jao-${jaoArtPath}-stage${evolutionLevel === 10 ? 1 : 2}.webp?v=poster-tree-20261011` : null;
+      if (jaoArtUrl) { b.classList.add('jao-illustrated'); b.style.setProperty('--jao-art-image', `url('${jaoArtUrl}')`); }
+      const jaoArtMarkup = jaoArtUrl ? '<span class="jao-card-art" aria-hidden="true"></span>' : '';
+      b.innerHTML = jaoArtMarkup + `<span class="card-rarity">${badge}</span><span class="card-kicker">${u.category}</span><span class="card-symbol">${u.icon}</span><span class="card-key">${i + 1}</span><h3>${u.title}</h3><p>${u.desc}</p><span class="card-pick">ESCOLHER <b>↗</b></span>`;
       b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
     });
   }
