@@ -55,7 +55,7 @@
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
   let jaoTrailTimer = 0;
-  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, caetanoEvolution: 0, caetanoEvolutionPath: null, caetanoEvolutionFinal: null, caetanoShotBonus: 0, caetanoMathPierce: 0, caetanoUltimateBonus: 0, caetanoUltimateStun: 0, caetanoFormulaRadius: 300, caetanoOperationIndex: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
+  const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, caetanoEvolution: 0, caetanoEvolutionPath: null, caetanoEvolutionFinal: null, caetanoShotBonus: 0, caetanoMathPierce: 0, caetanoUltimateBonus: 0, caetanoUltimateStun: 0, caetanoFormulaRadius: 300, caetanoOperationIndex: 0, thalysEvolution: 0, thalysEvolutionPath: null, thalysEvolutionFinal: null, thalysShotBonus: 0, thalysBallPierce: 0, thalysUltRadius: 190, thalysKnockback: 520, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
   const atlas = new Image();
   atlas.src = 'assets/jao-walk.png';
   const aliceAtlas = new Image();
@@ -64,6 +64,8 @@
   guiAtlas.src = 'assets/gui-walk.png';
   const caetanoAtlas = new Image();
   caetanoAtlas.src = 'assets/caetano-walk.png';
+  const thalysAtlas = new Image();
+  thalysAtlas.src = 'assets/thalys-walk.png';
   const loadEvolutionAtlas = (file) => { const image = new Image(); image.src = `assets/evolutions/${file}.png`; return image; };
   const evolutionAtlases = {
     jao: { 1: loadEvolutionAtlas('jao-stage1'), 2: loadEvolutionAtlas('jao-stage2') },
@@ -136,12 +138,12 @@
   }
   function selectCharacter(character) {
     selectedCharacter = character;
-    for (const id of ['jao', 'alice', 'gui', 'caetano']) {
+    for (const id of ['jao', 'alice', 'gui', 'caetano', 'thalys']) {
       const card = $(`character-${id}`), active = id === character;
       card.classList.toggle('selected', active); card.setAttribute('aria-pressed', String(active));
       card.querySelector('.character-selected-label').textContent = active ? 'SELECIONADO' : `ESCOLHER ${id.toUpperCase()}`;
     }
-    const characterNames = { jao: 'JÃO', alice: 'ALICE', gui: 'GUI', caetano: 'CAETANO' };
+    const characterNames = { jao: 'JÃO', alice: 'ALICE', gui: 'GUI', caetano: 'CAETANO', thalys: 'THALYS' };
     $('play-button').textContent = `JOGAR COM ${characterNames[character] || 'JÃO'}`;
   }
   setMode('menu');
@@ -149,10 +151,11 @@
     elapsed = 0; kills = 0; runStats = { xp: 0, chests: 0, ultimates: 0, upgrades: 0, evolutions: [], bossDefeated: false }; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
-    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, caetanoEvolution: 0, caetanoEvolutionPath: null, caetanoEvolutionFinal: null, caetanoShotBonus: 0, caetanoMathPierce: 0, caetanoUltimateBonus: 0, caetanoUltimateStun: 0, caetanoFormulaRadius: 300, caetanoOperationIndex: 0, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
+    Object.assign(player, { character: selectedCharacter, x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, caetanoEvolution: 0, caetanoEvolutionPath: null, caetanoEvolutionFinal: null, caetanoShotBonus: 0, caetanoMathPierce: 0, caetanoUltimateBonus: 0, caetanoUltimateStun: 0, caetanoFormulaRadius: 300, caetanoOperationIndex: 0, thalysEvolution: 0, thalysEvolutionPath: null, thalysEvolutionFinal: null, thalysShotBonus: 0, thalysBallPierce: 0, thalysUltRadius: 190, thalysKnockback: 520, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 });
     if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     if (selectedCharacter === 'caetano') Object.assign(player, { speed: 205, damage: 18, fireRate: .68, shotSpeed: 430, ultMax: 23 });
+    if (selectedCharacter === 'thalys') Object.assign(player, { speed: 215, damage: 22, fireRate: .72, shotSpeed: 470, ultMax: 20 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
   $('start-button').addEventListener('click', () => setMode('select'));
@@ -161,6 +164,7 @@
   $('character-alice').addEventListener('click', () => selectCharacter('alice'));
   $('character-gui').addEventListener('click', () => selectCharacter('gui'));
   $('character-caetano').addEventListener('click', () => selectCharacter('caetano'));
+  $('character-thalys').addEventListener('click', () => selectCharacter('thalys'));
   $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
@@ -264,6 +268,16 @@
     if (color === '#54dcff' || scratch) { player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .14; }
     emit(origin.x + dx / len * 14, origin.y + dy / len * 14, color === '#54dcff' ? '#c9f8ff' : color, 4, .45); sound(680, .045, 'triangle', .018);
   }
+  function fireThalysBall(target) {
+    if (!target) return;
+    const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1, aim = Math.atan2(dy, dx);
+    player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .16;
+    for (let i = 0; i < player.multishot; i++) {
+      const angle = aim + (i - (player.multishot - 1) / 2) * .13, speed = player.shotSpeed;
+      bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 1.6, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true });
+    }
+    emit(player.x + player.aimX * 14, player.y + player.aimY * 14, '#fff0b3', 5, .5); sound(390, .065, 'triangle', .035);
+  }
   function fireCardVolley(target, options = {}) {
     if (!target && !options.allowNoTarget) return;
     let aimX = player.aimX, aimY = player.aimY;
@@ -315,10 +329,32 @@
     showToast('PROVA FINAL: soma dano, enfraquece a horda e multiplica o impacto no mais forte!');
     updateHud();
   }
+  function castThalysUltimate() {
+    const radius = player.thalysUltRadius, radius2 = radius * radius;
+    const angle = Math.atan2(player.aimY, player.aimX);
+    startUltimateCooldown();
+    const nearby = enemies.filter(e => dist2(player, e) <= radius2);
+    ultimateVfx = { x: player.x, y: player.y, radius, angle, life: .78, max: .78, targets: nearby.map(e => ({ x: e.x, y: e.y })), color: '#ffe08a', type: 'volleyChest' };
+    emit(player.x, player.y, '#ffe08a', 34, 1.55); sound(145, .34, 'triangle', .075);
+    for (const e of nearby) {
+      const dx = e.x - player.x, dy = e.y - player.y, len = Math.hypot(dx, dy) || 1;
+      const force = player.thalysKnockback * (e.kind === 'boss' ? .62 : 1);
+      e.knockbackX = (e.knockbackX || 0) + dx / len * force;
+      e.knockbackY = (e.knockbackY || 0) + dy / len * force;
+      e.hp -= player.damage * .55; e.hit = .3;
+      emit(e.x, e.y, '#ffe08a', 10, .9); floatText(e.x, e.y - e.radius - 5, 'PEITADA!', '#ffe08a');
+      if (e.hp <= 0) defeat(e);
+    }
+    for (let i = enemies.length - 1; i >= 0; i--) if (enemies[i].hp <= 0) enemies.splice(i, 1);
+    floatText(player.x, player.y - 46, 'PEITADA DE REDE!', '#ffe08a');
+    showToast('PEITADA DE REDE: a bola explode ao redor e afasta os inimigos próximos!');
+    updateHud();
+  }
   function castUltimate() {
     if (state !== 'running' || player.ult > 0) return;
     runStats.ultimates++;
     if (player.character === 'caetano') { castCaetanoUltimate(); return; }
+    if (player.character === 'thalys') { castThalysUltimate(); return; }
     if (player.character === 'alice') {
       player.nailElement = (player.nailElement + 1) % aliceElements.length;
       const element = aliceElements[player.nailElement]; startUltimateCooldown();
@@ -554,6 +590,33 @@
     emit(hitEnemy.x, hitEnemy.y, '#8cecff', 3, .35);
   }
   function addXp(value) { const gained = Math.round(value * player.xpGain); runStats.xp += gained; player.xp += gained; if (player.xp >= player.nextXp) { player.xp -= player.nextXp; player.level++; player.nextXp = Math.round(player.nextXp * 1.28 + 2); makeUpgradeOptions(); setMode('upgrade'); sound(740, .15, 'sine', .04); } }
+    function thalysEvolutionChoices(tier) {
+    const choice = (id, icon, title, desc, color, apply) => ({ id, icon, title, desc, color, rarity: 'legendary', category: 'EVOLUÇÃO ' + (tier === 10 ? 'I' : 'II'), evolution: tier, apply });
+    if (tier === 10) return [
+      choice('ace', '🏐', 'Ace de Ouro', 'As bolas causam mais dano e atravessam um adversário extra.', '#ffe08a', () => { player.thalysEvolutionPath = 'ace'; player.thalysEvolution = 1; player.thalysShotBonus += .32; player.thalysBallPierce += 1; }),
+      choice('bloqueio', '↗', 'Bloqueio de Rede', 'A peitada alcança mais longe e joga os inimigos com mais força.', '#74dfff', () => { player.thalysEvolutionPath = 'bloqueio'; player.thalysEvolution = 1; player.thalysUltRadius += 65; player.thalysKnockback += 170; }),
+      choice('saque', '∿', 'Saque Potente', 'Atira bolas 18% mais rápido e elas causam mais dano.', '#ffb879', () => { player.thalysEvolutionPath = 'saque'; player.thalysEvolution = 1; player.fireRate *= .82; player.thalysShotBonus += .16; })
+    ];
+    const finish = (id, icon, title, desc, color, apply) => choice(id, icon, title, desc, color, () => { apply(); player.thalysEvolution = 2; player.thalysEvolutionFinal = id; });
+    const routes = {
+      ace: [
+        finish('ace-duplo', '2×', 'Ace Duplo', 'As bolas atravessam mais dois inimigos.', '#ffe08a', () => { player.thalysBallPierce += 2; }),
+        finish('bola-pesada', '●', 'Bola Pesada', 'Aumenta muito o dano das bolas.', '#ffcf61', () => { player.thalysShotBonus += .35; }),
+        finish('saque-triplo', '3×', 'Saque Triplo', 'Dispara uma bola extra por ataque.', '#fff1ba', () => { player.multishot += 1; })
+      ],
+      bloqueio: [
+        finish('paredao', '⬡', 'Paredão', 'A peitada cobre uma área bem maior.', '#74dfff', () => { player.thalysUltRadius += 90; }),
+        finish('peito-forte', '↗', 'Peito Forte', 'Aumenta bastante a força que afasta inimigos.', '#a7eeff', () => { player.thalysKnockback += 260; }),
+        finish('contra-ataque', '!', 'Contra-ataque', 'A peitada machuca mais e recarrega 10% mais rápido.', '#ffe08a', () => { player.damage *= 1.16; player.ultMax *= .9; })
+      ],
+      saque: [
+        finish('saque-relampago', '»', 'Saque Relâmpago', 'Ataca ainda mais rápido.', '#ffb879', () => { player.fireRate *= .78; }),
+        finish('canhao', '●', 'Canhão de Areia', 'As bolas ficam muito mais fortes.', '#ffe08a', () => { player.thalysShotBonus += .32; }),
+        finish('bola-efeito', '∞', 'Bola com Efeito', 'Dispara uma bola adicional e atravessa mais um inimigo.', '#9de8ff', () => { player.multishot += 1; player.thalysBallPierce += 1; })
+      ]
+    };
+    return routes[player.thalysEvolutionPath] || routes.ace;
+  }
   function caetanoEvolutionChoices(tier) {
     const choice = (id, icon, title, desc, color, apply) => ({ id, icon, title, desc, color, rarity: 'legendary', category: 'EVOLUÇÃO ' + (tier === 10 ? 'I' : 'II'), evolution: tier, apply });
     if (tier === 10) return [
@@ -611,23 +674,26 @@
       player.character === 'gui' && player.level === 10 && player.guiEvolution === 0 ? 10 :
       player.character === 'gui' && player.level === 20 && player.guiEvolution === 1 ? 20 :
       player.character === 'caetano' && player.level === 10 && player.caetanoEvolution === 0 ? 10 :
-      player.character === 'caetano' && player.level === 20 && player.caetanoEvolution === 1 ? 20 : 0;
-    const isAlice = player.character === 'alice', isGui = player.character === 'gui', isCaetano = player.character === 'caetano';
-    currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : isGui ? guiEvolutionChoices(evolutionLevel) : isCaetano ? caetanoEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
+      player.character === 'caetano' && player.level === 20 && player.caetanoEvolution === 1 ? 20 :
+      player.character === 'thalys' && player.level === 10 && player.thalysEvolution === 0 ? 10 :
+      player.character === 'thalys' && player.level === 20 && player.thalysEvolution === 1 ? 20 : 0;
+    const isAlice = player.character === 'alice', isGui = player.character === 'gui', isCaetano = player.character === 'caetano', isThalys = player.character === 'thalys';
+    currentChoices = evolutionLevel ? (isAlice ? aliceEvolutionChoices(evolutionLevel) : isGui ? guiEvolutionChoices(evolutionLevel) : isCaetano ? caetanoEvolutionChoices(evolutionLevel) : isThalys ? thalysEvolutionChoices(evolutionLevel) : jaoEvolutionChoices(evolutionLevel)) : [];
     ui.options.classList.toggle('evolution-four', isAlice && evolutionLevel === 10);
     if (evolutionLevel) {
       const pathNames = isAlice
         ? { poison: 'JARDIM TÓXICO', slow: 'ESMALTE GLACIAL', lifesteal: 'VERMELHO VAMPÍRICO', charm: 'ROSA HIPNÓTICO' }
         : isGui ? { close: 'DOZE DE BARALHO', ricochet: 'CARTAS RICOCHETE', trump: 'TRUNFO PREMIADO' }
           : isCaetano ? { sequence: 'SEQUÊNCIA INFINITA', geometry: 'GEOMETRIA APLICADA', calculus: 'CÁLCULO RÁPIDO' }
+          : isThalys ? { ace: 'ACE DE OURO', bloqueio: 'BLOQUEIO DE REDE', saque: 'SAQUE POTENTE' }
             : { trail: 'RASTRO DE TROVÃO', chain: 'CONDUTOR DE HORDA', charge: 'PULSO DE CONTRACARGA' };
-      const selectedPath = isAlice ? player.aliceEvolutionPath : isGui ? player.guiEvolutionPath : isCaetano ? player.caetanoEvolutionPath : player.jaoEvolutionPath;
-      const characterName = isAlice ? 'DA ALICE' : isGui ? 'DO GUI' : isCaetano ? 'DO CAETANO' : 'DO JÃO';
+      const selectedPath = isAlice ? player.aliceEvolutionPath : isGui ? player.guiEvolutionPath : isCaetano ? player.caetanoEvolutionPath : isThalys ? player.thalysEvolutionPath : player.jaoEvolutionPath;
+      const characterName = isAlice ? 'DA ALICE' : isGui ? 'DO GUI' : isCaetano ? 'DO CAETANO' : isThalys ? 'DO THALYS' : 'DO JÃO';
       ui.upgradeEyebrow.textContent = evolutionLevel === 10 ? `NÍVEL 10 · EVOLUÇÃO ${characterName}` : `NÍVEL 20 · ${pathNames[selectedPath] || 'FORMA FINAL'}`;
-      ui.upgradeTitle.textContent = evolutionLevel === 10 ? (isAlice ? 'Escolhe teu esmalte supremo.' : isGui ? 'Escolhe como vai dominar o baralho.' : isCaetano ? 'Escolhe tua fórmula matemática.' : 'Escolhe teu caminho elétrico.') : 'Desperta a forma final.';
+      ui.upgradeTitle.textContent = evolutionLevel === 10 ? (isAlice ? 'Escolhe teu esmalte supremo.' : isGui ? 'Escolhe como vai dominar o baralho.' : isCaetano ? 'Escolhe tua fórmula matemática.' : isThalys ? 'Escolhe teu estilo de futevôlei.' : 'Escolhe teu caminho elétrico.') : 'Desperta a forma final.';
       ui.upgradeHint.textContent = evolutionLevel === 10
-        ? (isAlice ? 'Escolhe uma cor para evoluir. O esmalte reforça uma habilidade e muda o visual da Alice.' : isGui ? 'Escolhe uma rota: cartas mais fortes de perto, ricochetes ou uma Mão de Trunfo ainda maior.' : isCaetano ? 'Escolhe uma habilidade matemática. Ela muda teus tiros e a Fórmula Final.' : 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do personagem.')
-        : `Escolhe como evoluir o caminho que tu abriu no nível 10. ${isAlice ? 'O esmalte escolhido define as três opções.' : isGui ? 'Cada estilo de baralho tem três formas finais.' : isCaetano ? 'Tua rota matemática define as três formas finais.' : 'Cada rota tem uma forma final.'}`;
+        ? (isAlice ? 'Escolhe uma cor para evoluir. O esmalte reforça uma habilidade e muda o visual da Alice.' : isGui ? 'Escolhe uma rota: cartas mais fortes de perto, ricochetes ou uma Mão de Trunfo ainda maior.' : isCaetano ? 'Escolhe uma habilidade matemática. Ela muda teus tiros e a Fórmula Final.' : isThalys ? 'Escolhe uma técnica: bolas mais fortes, ultimate mais ampla ou uma cadência de saque maior.' : 'Escolhe uma habilidade exclusiva. Ela muda teu estilo de jogo e a aparência do personagem.')
+        : `Escolhe como evoluir o caminho que tu abriu no nível 10. ${isAlice ? 'O esmalte escolhido define as três opções.' : isGui ? 'Cada estilo de baralho tem três formas finais.' : isCaetano ? 'Tua rota matemática define as três formas finais.' : isThalys ? 'A rota escolhida melhora os ataques ou a peitada.' : 'Cada rota tem uma forma final.'}`;
     } else {
       const remaining = [...upgrades];
       while (currentChoices.length < 3 && remaining.length) {
@@ -649,7 +715,7 @@
       b.addEventListener('click', () => chooseUpgrade(i)); ui.options.appendChild(b);
     });
   }
-  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); runStats.upgrades++; if (choice.evolution) runStats.evolutions.push(choice.title); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : player.character === 'gui' ? 'Gui' : player.character === 'caetano' ? 'Caetano' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
+  function chooseUpgrade(i) { if (state !== 'upgrade' || !currentChoices[i]) return; const choice = currentChoices[i]; choice.apply(); runStats.upgrades++; if (choice.evolution) runStats.evolutions.push(choice.title); setMode('running'); showToast(choice.evolution ? `${player.character === 'alice' ? 'Alice' : player.character === 'gui' ? 'Gui' : player.character === 'caetano' ? 'Caetano' : player.character === 'thalys' ? 'Thalys' : 'Jão'} evoluiu: ${choice.title}!` : `${choice.title} adquirido!`); }
   function spawnChest() { const a = rand(0, 6.28), r = rand(230, 380); chest = { x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, opened: false, pulse: 0 }; showToast('Um baú apareceu por perto. Procura no mapa!'); }
   const chestDrops = [
     { kind: 'toast', name: 'Torrada da Gorda', weight: 40, color: '#ffd76b', icon: '🍞' },
@@ -709,7 +775,7 @@
     }
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
     if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
-    fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') fireCardVolley(target); else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); } fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
+    fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') fireCardVolley(target); else if (player.character === 'thalys') fireThalysBall(target); else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); } fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) { const origin = petWorldPosition(c); fire(nearestEnemy(origin), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff', 1, null, false, origin); } companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
@@ -730,6 +796,7 @@
       if (e.poisonTimer > 0) e.hp -= e.poisonDps * dt;
       if (e.hp <= 0) { defeat(e); enemies.splice(i, 1); continue; }
       e.stun = Math.max(0, (e.stun || 0) - dt);
+      if (e.knockbackX || e.knockbackY) { e.x += e.knockbackX * dt; e.y += e.knockbackY * dt; const decay = Math.exp(-5.5 * dt); e.knockbackX *= decay; e.knockbackY *= decay; if (Math.abs(e.knockbackX) < 5) e.knockbackX = 0; if (Math.abs(e.knockbackY) < 5) e.knockbackY = 0; }
       if (e.stun > 0) { e.hit = Math.max(e.hit, .08); continue; }
       if (e.kind === 'boss') {
         e.bossAttackCooldown -= dt;
@@ -814,13 +881,13 @@
     ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`;
     ui.desktopUltFill.style.width = `${clamp((1 - player.ult / player.ultMax) * 100, 0, 100)}%`; ui.desktopUltStatus.textContent = player.ult > 0 ? `${Math.ceil(player.ult)}S` : 'PRONTA'; ui.desktopUlt.classList.toggle('is-charging', player.ult > 0);
     const element = player.nailElement >= 0 ? aliceElements[player.nailElement] : null;
-    const isGui = player.character === 'gui', isCaetano = player.character === 'caetano';
-    const ultIcon = isGui ? '🃏' : player.character === 'alice' ? '💅' : isCaetano ? 'Σ' : '⚡';
+    const isGui = player.character === 'gui', isCaetano = player.character === 'caetano', isThalys = player.character === 'thalys';
+    const ultIcon = isThalys ? '🏐' : isGui ? '🃏' : player.character === 'alice' ? '💅' : isCaetano ? 'Σ' : '⚡';
     ui.ultIcon.textContent = ultIcon; ui.desktopUltIcon.textContent = ultIcon;
-    ui.ultLabel.textContent = isGui ? 'TRUNFO' : player.character === 'alice' ? (element?.short || 'NAT') : isCaetano ? 'FÓRMULA' : 'ULT';
-    ui.ult.setAttribute('aria-label', isGui ? 'Mão de Trunfo: leque de cartas que perfura e atordoa' : player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : isCaetano ? 'Fórmula Final: explosão matemática em área que paralisa inimigos' : 'Ultimate de choque');
-    const ultColor = element?.color || (isGui ? '#ffd16b' : isCaetano ? '#58dfff' : '#dfe8ef');
-    ui.ult.style.setProperty('--element-color', ultColor); ui.ult.classList.toggle('alice-ultimate', player.character === 'alice'); ui.ult.classList.toggle('gui-ultimate', isGui); ui.desktopUlt.classList.toggle('gui-ultimate', isGui); ui.ult.classList.toggle('math-ultimate', isCaetano); ui.desktopUlt.classList.toggle('math-ultimate', isCaetano);
+    ui.ultLabel.textContent = isThalys ? 'PEITADA' : isGui ? 'TRUNFO' : player.character === 'alice' ? (element?.short || 'NAT') : isCaetano ? 'FÓRMULA' : 'ULT';
+    ui.ult.setAttribute('aria-label', isGui ? 'Mão de Trunfo: leque de cartas que perfura e atordoa' : player.character === 'alice' ? `Trocar esmalte${element ? `; atual: ${element.name}` : ''}` : isCaetano ? 'Fórmula Final: explosão matemática em área que paralisa inimigos' : isThalys ? 'Peitada de Rede: golpe em área que causa dano e afasta inimigos próximos' : 'Ultimate de choque');
+    const ultColor = element?.color || (isGui ? '#ffd16b' : isCaetano ? '#58dfff' : isThalys ? '#ffe08a' : '#dfe8ef');
+    ui.ult.style.setProperty('--element-color', ultColor); ui.ult.classList.toggle('alice-ultimate', player.character === 'alice'); ui.ult.classList.toggle('gui-ultimate', isGui); ui.desktopUlt.classList.toggle('gui-ultimate', isGui); ui.ult.classList.toggle('math-ultimate', isCaetano); ui.desktopUlt.classList.toggle('math-ultimate', isCaetano); ui.ult.classList.toggle('thalys-ultimate', isThalys); ui.desktopUlt.classList.toggle('thalys-ultimate', isThalys);
     ui.toastCount.textContent = toastCount; ui.toastUse.classList.toggle('hidden', toastCount <= 0 || state !== 'running'); ui.toastUse.disabled = player.hp >= player.maxHp;
   }
 
@@ -900,6 +967,15 @@
       for (const target of v.targets) { const q = screenPos(target); ctx.strokeStyle = '#8beeff'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); }
       ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; return;
     }
+    if (v.type === 'volleyChest') {
+      const wave = Math.max(5, radius), ballX = p.x + Math.cos(v.angle) * (18 + progress * v.radius * .68), ballY = p.y + Math.sin(v.angle) * (18 + progress * v.radius * .68);
+      ctx.globalAlpha = fade * .24; ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.arc(p.x, p.y, wave, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = fade * .94; ctx.strokeStyle = '#fff1b3'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(p.x, p.y, wave, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = '#ffcf61'; ctx.lineWidth = 2;
+      for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6 + progress * .18; ctx.beginPath(); ctx.moveTo(p.x + Math.cos(a) * (wave + 7), p.y + Math.sin(a) * (wave + 7)); ctx.lineTo(p.x + Math.cos(a) * (wave + 22), p.y + Math.sin(a) * (wave + 22)); ctx.stroke(); }
+      ctx.globalAlpha = fade; drawVolleyBallAt(ballX, ballY, 20 - progress * 5, progress * 2);
+      ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; return;
+    }
     if (v.type === 'chain') {
       ctx.globalAlpha = fade * .95;
       let from = p;
@@ -942,8 +1018,19 @@
     ctx.globalAlpha = fade * (1 - progress * .35); ctx.fillStyle = effectColor === '#42dfff' ? '#dffcff' : effectColor; ctx.beginPath(); ctx.arc(p.x, p.y, 8 + progress * 9, 0, Math.PI * 2); ctx.fill();
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
+  function drawVolleyBallAt(x, y, radius, rotation = 0) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rotation); ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#f7f5e9'; ctx.strokeStyle = '#24364b'; ctx.lineWidth = Math.max(1, radius * .16);
+    ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.lineWidth = Math.max(.8, radius * .14); ctx.strokeStyle = '#1d6495';
+    ctx.beginPath(); ctx.moveTo(-radius * .78, -radius * .2); ctx.quadraticCurveTo(0, -radius * .85, radius * .76, -.1 * radius); ctx.stroke();
+    ctx.strokeStyle = '#e5ad36'; ctx.beginPath(); ctx.moveTo(-radius * .15, -radius * .95); ctx.quadraticCurveTo(radius * .85, 0, radius * .08, radius * .92); ctx.stroke();
+    ctx.strokeStyle = '#337fa4'; ctx.beginPath(); ctx.moveTo(-radius * .85, radius * .12); ctx.quadraticCurveTo(-radius * .15, 0, radius * .72, radius * .48); ctx.stroke();
+    ctx.restore();
+  }
   function drawBullet(b) {
     const p = screenPos(b); ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    if (b.volleyBall) { drawVolleyBallAt(p.x, p.y, b.r, b.phase * .22); ctx.restore(); return; }
     if (b.card) {
       const angle = Math.atan2(b.vy, b.vx); ctx.translate(p.x, p.y); ctx.rotate(angle + Math.sin(b.phase) * .14);
       const cardW = b.ultimate ? 12 : 9, cardH = b.ultimate ? 18 : 13;
@@ -1112,7 +1199,7 @@
   }
   function drawPlayer() { const pos=screenPos(player), sx=pos.x, sy=pos.y; ctx.fillStyle='#07101077';ctx.beginPath();ctx.ellipse(sx,sy+16,19,9,0,0,Math.PI*2);ctx.fill();
     if (player.shotFlash > 0) { ctx.save(); ctx.globalAlpha = player.shotFlash * 2; ctx.strokeStyle = player.character === 'alice' ? (player.nailElement >= 0 ? aliceElements[player.nailElement].color : '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#65e7ff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(sx, sy + 2, 21 + player.shotFlash * 10, 13 + player.shotFlash * 5, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore(); }
-    const stage = player.character === 'jao' ? player.jaoEvolution : player.character === 'alice' ? player.aliceEvolution : player.character === 'gui' ? player.guiEvolution : player.caetanoEvolution;
+    const stage = player.character === 'jao' ? player.jaoEvolution : player.character === 'alice' ? player.aliceEvolution : player.character === 'gui' ? player.guiEvolution : player.character === 'thalys' ? player.thalysEvolution : player.caetanoEvolution;
     const evolvedAtlas = player.character === 'alice'
       ? evolutionAtlases.alice[player.aliceEvolutionPath]?.[stage]
       : evolutionAtlases[player.character]?.[stage];
@@ -1122,6 +1209,7 @@
       else ctx.drawImage(evolvedAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);
     }
     else if(player.character === 'caetano' && caetanoAtlas.complete && caetanoAtlas.naturalWidth){const cell=caetanoAtlas.naturalWidth/4,rowH=caetanoAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;drawCaetanoOrientedFrame(caetanoAtlas,col,player.facing,cell,rowH,size,sx,footY);}
+    else if(player.character === 'thalys' && thalysAtlas.complete && thalysAtlas.naturalWidth){const cell=thalysAtlas.naturalWidth/4,rowH=thalysAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(thalysAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'gui' && guiAtlas.complete && guiAtlas.naturalWidth){const cell=guiAtlas.naturalWidth/4,rowH=guiAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(guiAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'alice' && aliceAtlas.complete && aliceAtlas.naturalWidth){const cell=aliceAtlas.naturalWidth/4,rowH=aliceAtlas.naturalHeight/4,col=Math.floor(player.walk)%4,size=68,footY=sy+32;ctx.drawImage(aliceAtlas,col*cell,player.facing*rowH,cell,rowH,sx-size/2,footY-size,size,size);}
     else if(player.character === 'jao' && atlas.complete && atlas.naturalWidth){const cell=atlas.naturalWidth/4,rowH=atlas.naturalHeight/4,col=Math.floor(player.walk)%4,frame=atlasFrames[player.facing][col],scale=68/cell,drawW=frame[2]*scale,drawH=frame[3]*scale,footY=sy+32;ctx.drawImage(atlas,col*cell+frame[0],player.facing*rowH+frame[1],frame[2],frame[3],sx-drawW/2,footY-drawH,drawW,drawH);}
