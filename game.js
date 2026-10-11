@@ -269,7 +269,7 @@
     emit(origin.x + dx / len * 14, origin.y + dy / len * 14, color === '#54dcff' ? '#c9f8ff' : color, 4, .45); sound(680, .045, 'triangle', .018);
   }
   function fireThalysBall(target) {
-    if (!target) return;
+    if (!target || bullets.some(b => b.volleyBall)) return false;
     const dx = target.x - player.x, dy = target.y - player.y, len = Math.hypot(dx, dy) || 1, aim = Math.atan2(dy, dx);
     player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .16;
     for (let i = 0; i < player.multishot; i++) {
@@ -278,6 +278,7 @@
       bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 3, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true, turnDistance, travelDistance: 0, returning: false, hitCount: 0, maxHits: 3 + player.thalysBallPierce });
     }
     emit(player.x + player.aimX * 14, player.y + player.aimY * 14, '#fff0b3', 5, .5); sound(390, .065, 'triangle', .035);
+    return true;
   }
   function fireCardVolley(target, options = {}) {
     if (!target && !options.allowNoTarget) return;
@@ -776,7 +777,7 @@
     }
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
     if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
-    fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') fireCardVolley(target); else if (player.character === 'thalys') fireThalysBall(target); else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); } fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); }
+    fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') { fireCardVolley(target); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } else if (player.character === 'thalys') { if (fireThalysBall(target)) fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) { const origin = petWorldPosition(c); fire(nearestEnemy(origin), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff', 1, null, false, origin); } companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i], dx = player.x - e.x, dy = player.y - e.y, len = Math.hypot(dx, dy) || 1;
