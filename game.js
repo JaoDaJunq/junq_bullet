@@ -155,7 +155,7 @@
     if (selectedCharacter === 'jao') Object.assign(player, { speed: 225 });
     if (selectedCharacter === 'gui') Object.assign(player, { speed: 198, damage: 20, fireRate: .82, shotSpeed: 485, ultMax: 21 });
     if (selectedCharacter === 'caetano') Object.assign(player, { speed: 205, damage: 18, fireRate: .68, shotSpeed: 430, ultMax: 23 });
-    if (selectedCharacter === 'thalys') Object.assign(player, { speed: 215, damage: 22, fireRate: .72, shotSpeed: 470, ultMax: 20 });
+    if (selectedCharacter === 'thalys') Object.assign(player, { speed: 230, damage: 22, fireRate: .72, shotSpeed: 470, ultMax: 20 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
   $('start-button').addEventListener('click', () => setMode('select'));
@@ -274,7 +274,8 @@
     player.aimX = dx / len; player.aimY = dy / len; player.shotFlash = .16;
     for (let i = 0; i < player.multishot; i++) {
       const angle = aim + (i - (player.multishot - 1) / 2) * .13, speed = player.shotSpeed;
-      bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 1.6, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true });
+      const turnDistance = clamp(len + 80, 220, 430);
+      bullets.push({ x: player.x, y: player.y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, damage: player.damage * (1 + player.thalysShotBonus), life: 3, color: '#ffe08a', r: 9, age: 0, trail: [], phase: rand(0, 6.28), pierce: player.pierce + player.thalysBallPierce, hitEnemies: new Set(), volleyBall: true, turnDistance, travelDistance: 0, returning: false, hitCount: 0, maxHits: 3 + player.thalysBallPierce });
     }
     emit(player.x + player.aimX * 14, player.y + player.aimY * 14, '#fff0b3', 5, .5); sound(390, .065, 'triangle', .035);
   }
@@ -814,7 +815,16 @@
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
       if (!b.card) { b.trail.unshift({ x: b.x, y: b.y }); if (b.trail.length > 6) b.trail.pop(); }
+      if (b.volleyBall && !b.returning && (b.travelDistance >= b.turnDistance || b.hitCount >= b.maxHits)) b.returning = true;
+      if (b.volleyBall && b.returning) {
+        const dx = player.x - b.x, dy = player.y - b.y, distance = Math.hypot(dx, dy);
+        if (distance < 22) { bullets.splice(i, 1); continue; }
+        const returnSpeed = player.shotSpeed * 1.08;
+        b.vx = dx / (distance || 1) * returnSpeed; b.vy = dy / (distance || 1) * returnSpeed;
+      }
+      const previousX = b.x, previousY = b.y;
       b.x += b.vx * dt; b.y += b.vy * dt; b.age += dt; b.phase += dt * 14; b.life -= dt;
+      if (b.volleyBall && !b.returning) b.travelDistance += Math.hypot(b.x - previousX, b.y - previousY);
       let gone = b.life <= 0;
       for (let j = enemies.length - 1; j >= 0 && !gone; j--) {
         const e = enemies[j];
@@ -824,8 +834,15 @@
         const slowBonus = player.character === 'alice' && player.aliceEvolutionPath === 'slow' && e.slowTimer > 0 ? player.aliceSlowDamageBonus : 1;
         const closeRange = player.character === 'gui' && player.guiEvolutionPath === 'close' && b.card && !b.ultimate && dist2(player, e) <= player.guiCloseRange ** 2;
         const closeBonus = closeRange ? 1 + player.guiCloseDamageBonus : 1;
-        const damage = b.damage * (critical ? 2 : 1) * vulnerable * slowBonus * closeBonus;
+        const damage = b.damage * (b.volleyBall && b.returning ? .55 : 1) * (critical ? 2 : 1) * vulnerable * slowBonus * closeBonus;
         e.hp -= damage; e.hit = .12;
+        if (b.volleyBall) {
+          const speed = Math.hypot(b.vx, b.vy) || 1, shove = (b.returning ? 72 : 92) * (e.kind === 'boss' ? .45 : 1);
+          e.knockbackX = (e.knockbackX || 0) + b.vx / speed * shove;
+          e.knockbackY = (e.knockbackY || 0) + b.vy / speed * shove;
+          b.hitCount++;
+          if (b.hitCount >= b.maxHits) { b.returning = true; break; }
+        }
         if (b.stun || (closeRange && player.guiCloseStun > 0)) { e.stun = Math.max(e.stun || 0, b.stun || player.guiCloseStun); floatText(e.x, e.y - e.radius - 5, 'ATORDOADO', '#ffd979'); }
         if (player.character === 'gui') ricochetGuiCard(b, e);
         applyNailEffect(e, b.element, damage);
@@ -850,7 +867,8 @@
         emit(b.x, b.y, b.color, 6, .62);
         floatText(e.x, e.y - e.radius, `${critical ? 'CRIT! ' : ''}${Math.round(damage)}`, critical ? '#ffe27c' : b.card ? '#ffe4a1' : '#bdf4ff');
         if (b.basic && player.character === 'jao' && !b.chainTriggered) { b.chainTriggered = true; chainShock(e, damage); }
-        if (b.pierce > 0) { b.pierce--; if (b.mathOp === 'divide') b.damage *= .72; } else gone = true;
+        if (b.volleyBall) { if (b.hitCount >= b.maxHits) b.returning = true; }
+        else if (b.pierce > 0) { b.pierce--; if (b.mathOp === 'divide') b.damage *= .72; } else gone = true;
         if (e.hp <= 0) { defeat(e); enemies.splice(j, 1); }
       }
       if (gone) bullets.splice(i, 1);
