@@ -65,7 +65,7 @@
   const caetanoAtlas = new Image();
   caetanoAtlas.src = 'assets/caetano-walk.png';
   const thalysAtlas = new Image();
-  thalysAtlas.src = 'assets/thalys-walk.png';
+  thalysAtlas.src = 'assets/thalys-walk.png?v=tattoos-20261011';
   const loadEvolutionAtlas = (file) => { const image = new Image(); image.src = `assets/evolutions/${file}.png`; return image; };
   const evolutionAtlases = {
     jao: { 1: loadEvolutionAtlas('jao-stage1'), 2: loadEvolutionAtlas('jao-stage2') },
@@ -1020,12 +1020,24 @@
   }
   function drawVolleyBallAt(x, y, radius, rotation = 0) {
     ctx.save(); ctx.translate(x, y); ctx.rotate(rotation); ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#f7f5e9'; ctx.strokeStyle = '#24364b'; ctx.lineWidth = Math.max(1, radius * .16);
+    ctx.fillStyle = '#f4ed00'; ctx.strokeStyle = '#17202b'; ctx.lineWidth = Math.max(1, radius * .16);
     ctx.beginPath(); ctx.arc(0, 0, radius, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.lineWidth = Math.max(.8, radius * .14); ctx.strokeStyle = '#1d6495';
-    ctx.beginPath(); ctx.moveTo(-radius * .78, -radius * .2); ctx.quadraticCurveTo(0, -radius * .85, radius * .76, -.1 * radius); ctx.stroke();
-    ctx.strokeStyle = '#e5ad36'; ctx.beginPath(); ctx.moveTo(-radius * .15, -radius * .95); ctx.quadraticCurveTo(radius * .85, 0, radius * .08, radius * .92); ctx.stroke();
-    ctx.strokeStyle = '#337fa4'; ctx.beginPath(); ctx.moveTo(-radius * .85, radius * .12); ctx.quadraticCurveTo(-radius * .15, 0, radius * .72, radius * .48); ctx.stroke();
+    ctx.fillStyle = '#101216';
+    for (let i = 0; i < 3; i++) {
+      const a = rotation + i * Math.PI * 2 / 3, spread = .43;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a - spread) * radius * .96, Math.sin(a - spread) * radius * .96);
+      ctx.quadraticCurveTo(Math.cos(a - .2) * radius * .43, Math.sin(a - .2) * radius * .43, Math.cos(a + .12) * radius * .16, Math.sin(a + .12) * radius * .16);
+      ctx.quadraticCurveTo(Math.cos(a + .4) * radius * .48, Math.sin(a + .4) * radius * .48, Math.cos(a + spread) * radius * .96, Math.sin(a + spread) * radius * .96);
+      ctx.quadraticCurveTo(Math.cos(a + .72) * radius * .94, Math.sin(a + .72) * radius * .94, Math.cos(a - .72) * radius * .94, Math.sin(a - .72) * radius * .94);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.lineWidth = Math.max(.65, radius * .09); ctx.strokeStyle = '#fff45a';
+    for (let i = 0; i < 3; i++) {
+      const a = rotation + i * Math.PI * 2 / 3;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a + .48) * radius * .94, Math.sin(a + .48) * radius * .94);
+      ctx.quadraticCurveTo(Math.cos(a + .78) * radius * .72, Math.sin(a + .78) * radius * .72, Math.cos(a + .98) * radius * .38, Math.sin(a + .98) * radius * .38); ctx.stroke();
+    }
     ctx.restore();
   }
   function drawBullet(b) {
