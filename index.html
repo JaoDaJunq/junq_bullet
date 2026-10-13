@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#11151d">
   <title>Junq Bullet</title>
-  <link rel="stylesheet" href="style.css?v=99c7a91e">
+  <link rel="stylesheet" href="style.css?v=lobby1">
 </head>
 <body>
   <canvas id="game" aria-label="Junq Bullet, jogo de sobrevivência"></canvas>
@@ -45,35 +45,28 @@
     </section>
     <section id="character-select" class="panel hidden character-panel lobby-room">
       <header class="lobby-header"><div><div class="eyebrow">BASE DOS SOBREVIVENTES</div><h2>Quem vai encarar a horda?</h2></div><button id="back-to-menu" class="secondary-button lobby-back" type="button">VOLTAR</button></header>
-      <p class="lobby-hint">A base está em movimento. Toque em alguém para conhecer o personagem.</p>
-      <div class="lobby-room-scene">
-        <div class="lobby-decor decor-left"><span>✦</span><b>BASE JUNQ</b><small>ÁREA DE CONVÍVIO</small></div>
-        <div class="lobby-decor decor-right"><span>▤</span><b>MISSÃO</b><small>ARENA BLOQUEADA</small></div>
-        <div class="lobby-character-grid">
-          <button id="character-jao" class="character-card selected" type="button" aria-pressed="true">
-            <span class="character-art character-art-jao" aria-hidden="true"></span><span class="character-name">JÃO</span><span class="lobby-activity">⚡ Treinando esquiva</span>
-            <span class="character-weapon">CHOQUE EM CADEIA</span><span class="character-description">Mais ágil que os outros. Seu tiro elétrico conecta até três inimigos; nos níveis 10 e 20, escolhe evoluções com visuais e poderes próprios.</span><span class="character-selected-label">SELECIONADO</span>
-          </button>
-          <button id="character-alice" class="character-card" type="button" aria-pressed="false">
-            <span class="character-art character-art-alice" aria-hidden="true"></span><span class="character-name">ALICE</span><span class="lobby-activity">💅 Fazendo nail art</span>
-            <span class="character-weapon">ARRANHÃO DE NAIL ART</span><span class="character-description">Cada ultimate avança o esmalte: verde envenena, azul reduz velocidade, vermelho rouba vida e rosa marca o alvo. Evolui nos níveis 10 e 20 com quatro caminhos de habilidade.</span><span class="character-selected-label">SELECIONAR ALICE</span>
-          </button>
-          <button id="character-gui" class="character-card" type="button" aria-pressed="false">
-            <span class="character-art character-art-gui" aria-hidden="true"></span><span class="character-name">GUI</span><span class="lobby-activity">🂡 Praticando truques</span>
-            <span class="character-weapon">DOZE DE CARTAS</span><span class="character-description">Dispara três cartas num cone curto, fortes de perto. Evolui nos níveis 10 e 20 entre dano de curta distância, ricochetes e melhorias para a Mão de Trunfo.</span><span class="character-selected-label">SELECIONAR GUI</span>
-          </button>
-          <button id="character-caetano" class="character-card" type="button" aria-pressed="false">
-            <span class="character-art character-art-caetano" aria-hidden="true"></span><span class="character-name">CAETANO</span><span class="lobby-activity">∑ Resolvendo equações</span>
-            <span class="character-weapon">FÓRMULA FINAL</span><span class="character-description">Cada tiro alterna entre soma em área, subtração que enfraquece, multiplicação que cria disparos extras e divisão que atravessa inimigos. A Prova Final desenha um plano cartesiano, enfraquece a horda e concentra dano no alvo mais forte. Evolui nos níveis 10 e 20.</span><span class="character-selected-label">SELECIONAR CAETANO</span>
-          </button>
-          <button id="character-thalys" class="character-card" type="button" aria-pressed="false">
-            <span class="character-art character-art-thalys" aria-hidden="true"></span><span class="character-name">THALYS</span><span class="lobby-activity">🏐 Treinando futevôlei</span>
-            <span class="character-weapon">FUTEVÔLEI DE ARENA</span><span class="character-description">Lança bolas de futevôlei contra os inimigos. A Peitada de Rede acerta em volta e afasta quem chega perto. Evolui nos níveis 10 e 20 com rotas de saque, ace e bloqueio.</span><span class="character-selected-label">SELECIONAR THALYS</span>
-          </button>
-        </div>
-        <div id="lobby-player-avatar" class="lobby-player-avatar" aria-label="Personagem selecionado"></div><div class="lobby-door-locked" id="lobby-door"><span class="door-icon">▥</span><b>PORTA DA ARENA</b><small id="lobby-door-status">ESCOLHA UM SOBREVIVENTE</small></div>
+      <p class="lobby-hint">Toque em um sobrevivente para ver sua ficha. Escolha alguém para liberar a saída.</p>
+      <div class="lobby-room-scene" role="group" aria-label="Sala de convivência dos sobreviventes">
+        <button id="character-jao" class="lobby-hotspot hotspot-jao" type="button" aria-label="Ver Jão" aria-pressed="true">
+          <span class="character-weapon sr-only">CHOQUE EM CADEIA</span><span class="character-description sr-only">Mais ágil que os outros. Seu tiro elétrico conecta até três inimigos; nos níveis 10 e 20, escolhe evoluções com visuais e poderes próprios.</span><span class="character-selected-label sr-only">SELECIONADO</span>
+        </button>
+        <button id="character-alice" class="lobby-hotspot hotspot-alice" type="button" aria-label="Ver Alice" aria-pressed="false">
+          <span class="character-weapon sr-only">ARRANHÃO DE NAIL ART</span><span class="character-description sr-only">Cada ultimate avança o esmalte: verde envenena, azul reduz velocidade, vermelho rouba vida e rosa marca o alvo. Evolui nos níveis 10 e 20 com quatro caminhos de habilidade.</span><span class="character-selected-label sr-only">SELECIONAR ALICE</span>
+        </button>
+        <button id="character-gui" class="lobby-hotspot hotspot-gui" type="button" aria-label="Ver Gui" aria-pressed="false">
+          <span class="character-weapon sr-only">DOZE DE CARTAS</span><span class="character-description sr-only">Dispara três cartas num cone curto, fortes de perto. Evolui nos níveis 10 e 20 entre dano de curta distância, ricochetes e melhorias para a Mão de Trunfo.</span><span class="character-selected-label sr-only">SELECIONAR GUI</span>
+        </button>
+        <button id="character-caetano" class="lobby-hotspot hotspot-caetano" type="button" aria-label="Ver Caetano" aria-pressed="false">
+          <span class="character-weapon sr-only">FÓRMULA FINAL</span><span class="character-description sr-only">Cada tiro alterna entre soma em área, subtração que enfraquece, multiplicação que cria disparos extras e divisão que atravessa inimigos. A Prova Final desenha um plano cartesiano, enfraquece a horda e concentra dano no alvo mais forte. Evolui nos níveis 10 e 20.</span><span class="character-selected-label sr-only">SELECIONAR CAETANO</span>
+        </button>
+        <button id="character-thalys" class="lobby-hotspot hotspot-thalys" type="button" aria-label="Ver Thalys" aria-pressed="false">
+          <span class="character-weapon sr-only">FUTEVÔLEI DE ARENA</span><span class="character-description sr-only">Lança uma bola de futevôlei que bate no inimigo e volta para Thalys, causando um leve recuo. A Peitada de Rede afasta os inimigos próximos. Evolui nos níveis 10 e 20 com rotas de saque, ace e bloqueio.</span><span class="character-selected-label sr-only">SELECIONAR THALYS</span>
+        </button>
+        <div id="lobby-player-avatar" class="lobby-player-avatar" aria-label="Personagem selecionado"></div>
+        <div class="lobby-door-locked" id="lobby-door" aria-hidden="true"><span class="door-icon">▥</span><b>PORTA DA ARENA</b><small id="lobby-door-status">ESCOLHA UM SOBREVIVENTE</small></div>
+        <button id="lobby-enter" class="lobby-enter-door" type="button" disabled aria-label="Escolha um personagem para liberar a porta"><span>ARENA</span><small>TRANCADA</small></button>
       </div>
-      <div class="character-actions lobby-actions"><button id="play-button" class="hidden" type="button">JOGAR</button><button id="lobby-enter" class="primary" type="button" disabled>ESCOLHA UM PERSONAGEM PARA LIBERAR A PORTA</button></div>
+      <button id="play-button" class="hidden" type="button">JOGAR</button>
       <div id="lobby-detail" class="lobby-detail hidden" role="dialog" aria-modal="true" aria-labelledby="lobby-detail-name">
         <button id="lobby-detail-close" class="lobby-close" type="button" aria-label="Fechar">×</button>
         <div id="lobby-detail-art" class="lobby-detail-art"></div><div class="eyebrow">DOSSIÊ DO SOBREVIVENTE</div>
@@ -116,6 +109,6 @@
       <button id="retry-button" class="primary">TENTAR DE NOVO</button>
     </section>
   </main>
-  <script src="game.js?v=cc30c2ffabc"></script>
+  <script src="game.js?v=lobby1"></script>
 </body>
 </html>
