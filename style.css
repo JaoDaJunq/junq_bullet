@@ -278,3 +278,6 @@
  .lobby-enter-door{border-radius:7px 7px 2px 2px}.lobby-player-avatar{width:6.5%;height:15%}
  .lobby-detail{padding:16px}.lobby-detail-art{height:min(34dvh,310px);min-height:160px;width:min(220px,58vw);margin-bottom:10px}.lobby-detail h2{font-size:24px;margin:4px}.lobby-detail p{font-size:13px;line-height:1.35;margin:8px auto 14px}.lobby-detail .primary{padding:12px 14px}
 }
+
+/* Keep hotspot descriptions available to screen readers without painting them over the room. */
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;clip-path:inset(50%)!important}
