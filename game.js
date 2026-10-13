@@ -1301,7 +1301,7 @@
     if (mobile && portraitQuery.matches) { ctx.translate(w / 2, h / 2); ctx.scale(1.7, 1.7); ctx.translate(-w / 2, -h / 2); }
     drawFloor(); drawJaoTrail();
     for (const o of xpOrbs) {
-      const p = screenPos(o), color = o.value >= 20 ? '#ffd34e' : o.value >= 7 ? '#bb79ff' : o.value >= 6 ? '#ffd34e' : '#62dcff';
+      const p = screenPos(o), color = o.value >= 20 ? '#ffab28' : o.value >= 7 ? '#bb79ff' : o.value >= 6 ? '#ffe45b' : '#62dcff';
       const size = o.value >= 20 ? 10 : o.value >= 7 ? 8 : o.value >= 6 ? 7 : 6;
       ctx.save(); ctx.globalAlpha = .24; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, size * 1.8, 0, Math.PI * 2); ctx.fill();
       ctx.globalAlpha = 1; ctx.translate(p.x, p.y); ctx.rotate(Math.PI / 4); ctx.fillStyle = color; ctx.fillRect(-size / 2, -size / 2, size, size);
