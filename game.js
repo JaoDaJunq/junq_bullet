@@ -100,9 +100,17 @@
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   }
-  addEventListener('resize', resize); resize();
+  resize();
   const mobile = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   const frameInterval = mobile ? 1000 / 30 : 1000 / 60;
+  const portraitQuery = matchMedia('(orientation: portrait)');
+  const orientationWarning = document.getElementById('orientation-warning');
+  function updateOrientationWarning() {
+    orientationWarning.classList.toggle('hidden', !(mobile && portraitQuery.matches && state === 'running'));
+  }
+  function handleViewportChange() { resize(); updateOrientationWarning(); }
+  addEventListener('resize', handleViewportChange);
+  addEventListener('orientationchange', handleViewportChange);
   const controlSettings = { size: 116, position: 24, side: 'left', autoUltimate: false };
   try {
     const saved = JSON.parse(localStorage.getItem('junqBulletControls') || '{}');
@@ -135,6 +143,7 @@
     ui.joystick.classList.toggle('hidden', !mobile || next !== 'running'); ui.ult.classList.toggle('hidden', !mobile || next !== 'running');
     ui.desktopUlt.classList.toggle('hidden', mobile || next !== 'running');
     ui.toastUse.classList.toggle('hidden', next !== 'running' || toastCount <= 0);
+    updateOrientationWarning();
   }
   function selectCharacter(character) {
     selectedCharacter = character;
@@ -1303,6 +1312,7 @@
     requestAnimationFrame(loop);
     if (state !== 'running' && !needsRender) return;
     if (t - last < frameInterval - 1) return;
+    if (state === 'running' && mobile && portraitQuery.matches) { last = t; return; }
     const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
     if (state === 'running') update(dt);
     render(); needsRender = false;
