@@ -131,6 +131,7 @@
     state = next;
     needsRender = true;
     ui.screen.classList.toggle('hidden', next === 'running');
+    ui.screen.classList.toggle('character-selection-mode', next === 'select');
     ui.menu.classList.toggle('hidden', next !== 'menu'); ui.characterSelect.classList.toggle('hidden', next !== 'select'); ui.upgrade.classList.toggle('hidden', next !== 'upgrade');
     ui.pause.classList.toggle('hidden', next !== 'paused'); ui.over.classList.toggle('hidden', next !== 'gameover');
     ui.hud.classList.toggle('hidden', next === 'menu' || next === 'select');
