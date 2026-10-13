@@ -170,30 +170,20 @@
     $('lobby-detail-name').textContent = names[character];
     $('lobby-detail-class').textContent = card.querySelector('.character-weapon').textContent;
     $('lobby-detail-description').textContent = card.querySelector('.character-description').textContent;
-    $('lobby-detail-art').className = `lobby-detail-art character-art-${character}`;
+    $('lobby-detail-art').className = `lobby-detail-art character-poster-${character}`;
     $('lobby-detail').classList.remove('hidden');
   }
   function closeLobbyDetail() { $('lobby-detail').classList.add('hidden'); lobbyDetailCharacter = null; }
   $('lobby-detail-close').addEventListener('click', closeLobbyDetail);
   $('lobby-choose').addEventListener('click', () => {
     if (!lobbyDetailCharacter) return;
-    selectCharacter(lobbyDetailCharacter);
-    $('lobby-player-avatar').style.backgroundImage = `url('assets/${lobbyDetailCharacter}-walk.png')`;
-    $('lobby-player-avatar').classList.add('active');
-    $('lobby-detail').classList.add('hidden');
-    $('lobby-door').classList.add('unlocked');
-    $('lobby-door-status').textContent = 'LIBERADA · ENTRE NA ARENA';
-    $('lobby-enter').disabled = false;
-    $('lobby-enter').classList.add('unlocked');
-    $('lobby-enter').setAttribute('aria-label', `Entrar na arena com ${lobbyDetailCharacter}`);
-    $('lobby-enter').innerHTML = '<span>ENTRAR</span><small>NA ARENA ↗</small>';
-  });
-  $('lobby-enter').addEventListener('click', () => {
-    if (!selectedCharacter) return;
+    const character = lobbyDetailCharacter;
+    selectCharacter(character);
+    closeLobbyDetail();
     audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
     reset();
   });
-  $('start-button').addEventListener('click', () => { $('lobby-door').classList.remove('unlocked'); $('lobby-door-status').textContent = 'ESCOLHA UM SOBREVIVENTE'; $('lobby-enter').disabled = true; $('lobby-enter').classList.remove('unlocked'); $('lobby-enter').setAttribute('aria-label', 'Escolha um personagem para liberar a porta'); $('lobby-enter').innerHTML = '<span>ARENA</span><small>TRANCADA</small>'; $('lobby-player-avatar').classList.remove('active'); setMode('select'); });
+  $('start-button').addEventListener('click', () => setMode('select'));
   $('back-to-menu').addEventListener('click', () => setMode('menu'));
   $('character-jao').addEventListener('click', () => openLobbyDetail('jao'));
   $('character-alice').addEventListener('click', () => openLobbyDetail('alice'));
