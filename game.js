@@ -171,6 +171,7 @@
   $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
+  $('pause-character-select').addEventListener('click', () => setMode('select'));
   ui.joystickPosition.addEventListener('input', () => { controlSettings.position = Number(ui.joystickPosition.value); applyControlSettings(true); });
   ui.joystickSize.addEventListener('input', () => { controlSettings.size = Number(ui.joystickSize.value); applyControlSettings(true); });
   ui.handednessToggle.addEventListener('click', () => { controlSettings.side = controlSettings.side === 'left' ? 'right' : 'left'; applyControlSettings(true); });
@@ -1297,9 +1298,15 @@
   }
   function render() {
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    if (mobile && portraitQuery.matches) { ctx.translate(w / 2, h / 2); ctx.scale(1.45, 1.45); ctx.translate(-w / 2, -h / 2); }
+    if (mobile && portraitQuery.matches) { ctx.translate(w / 2, h / 2); ctx.scale(1.7, 1.7); ctx.translate(-w / 2, -h / 2); }
     drawFloor(); drawJaoTrail();
-    for(const o of xpOrbs){const p=screenPos(o);ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();}
+    for (const o of xpOrbs) {
+      const p = screenPos(o), color = o.value >= 20 ? '#ffd34e' : o.value >= 7 ? '#bb79ff' : o.value >= 6 ? '#ffd34e' : '#62dcff';
+      const size = o.value >= 20 ? 10 : o.value >= 7 ? 8 : o.value >= 6 ? 7 : 6;
+      ctx.save(); ctx.globalAlpha = .24; ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.x, p.y, size * 1.8, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1; ctx.translate(p.x, p.y); ctx.rotate(Math.PI / 4); ctx.fillStyle = color; ctx.fillRect(-size / 2, -size / 2, size, size);
+      ctx.fillStyle = '#ffffffd9'; ctx.fillRect(-1, -1, 2, 2); ctx.restore();
+    }
     drawChest(); for(const item of items) drawItem(item); for(const b of bullets) drawBullet(b);
     for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
     drawPlayer(); for(const f of floating){const p=screenPos(f);ctx.globalAlpha=clamp(f.life/.8,0,1);ctx.font='bold 12px system-ui';ctx.textAlign='center';ctx.fillStyle=f.color;ctx.fillText(f.text,p.x,p.y);}ctx.globalAlpha=1; drawObjectiveArrows();
