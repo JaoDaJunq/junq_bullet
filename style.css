@@ -186,9 +186,8 @@
 
 /* Ajuste mobile: seleção sem faixa horizontal e pôsteres proporcionais. */
 @media(max-width:650px){
-  .screen{overflow-y:auto;place-items:center;padding:12px 0}
-  .panel{width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}
-  .character-panel{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:19px 11px 14px;overflow-x:hidden;overflow-y:auto}
+  .screen.character-selection-mode{overflow-y:auto;place-items:center;padding:12px 0}
+  .screen.character-selection-mode .character-panel{width:min(540px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:19px 11px 14px;overflow-x:hidden;overflow-y:auto}
   .character-panel h2{font-size:clamp(20px,5.4vw,27px);margin:8px 0 12px}
   .character-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;padding:4px 3px 8px;scroll-snap-type:none}
   .character-card{width:100%;min-width:0;min-height:0;flex:none;gap:5px;padding:8px 7px;border-width:1px}
@@ -209,8 +208,8 @@
   .character-card .character-description{font-size:8px}
 }
 @media(max-height:640px) and (max-width:650px){
-  .screen{place-items:start center}
-  .character-panel{max-height:calc(100dvh - 16px)}
+  .screen.character-selection-mode{place-items:start center}
+  .screen.character-selection-mode .character-panel{max-height:calc(100dvh - 16px)}
   .character-card .character-art,#character-jao .character-art-jao{height:96px}
 }
 
