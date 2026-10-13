@@ -53,6 +53,19 @@
   let runStats = { xp: 0, chests: 0, ultimates: 0, upgrades: 0, evolutions: [], bossDefeated: false };
   let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
+  const runMaps = [
+    { id:'rain-alley', name:'Beco das Chuvas', motif:'rain', wash:'rgba(25,92,125,.2)', accent:'#58d9ff', hue:12, enemyPool:['blob','bat','wolf','roach'], enemyNames:{blob:'Gosma de Sarjeta',bat:'Morcego do Fio',wolf:'Rato de Beco',roach:'Barata Blindada'}, elites:['Rato Barrigudo','Barata Blindada'], bosses:[{name:'Mestre do Bueiro',hue:0},{name:'Enxurrada Viva',hue:85}] },
+    { id:'spore-square', name:'Praça dos Esporos', motif:'spores', wash:'rgba(70,111,61,.22)', accent:'#a9f36c', hue:72, enemyPool:['blob','blob','bat','wolf','roach'], enemyNames:{blob:'Gosma Esporulada',bat:'Mariposa de Esporos',wolf:'Rastejante de Raiz',roach:'Besouro-Musgo'}, elites:['Caranguejo de Raiz','Cogumelo Couraçado'], bosses:[{name:'Rainha Esporo',hue:0},{name:'O Jardineiro',hue:115}] },
+    { id:'flooded-gallery', name:'Galeria Submersa', motif:'water', wash:'rgba(18,94,134,.23)', accent:'#5de8ed', hue:165, enemyPool:['bat','roach','blob','roach','wolf'], enemyNames:{blob:'Mímico de Sacola',bat:'Enguia Elétrica',wolf:'Caranguejo de Dreno',roach:'Barata D’Água'}, elites:['Enguia de Neon','Mímico Gigante'], bosses:[{name:'Tubarão do Subsolo',hue:0},{name:'Trem Fantasma',hue:75}] },
+    { id:'dead-arcade', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
+    { id:'underpass-court', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
+  ];
+  let activeMap = runMaps[0], bossWave = 0, bossesDefeated = 0, previousMapId = '';
+  try { previousMapId = localStorage.getItem('junqBulletLastMap') || ''; } catch (_) {}
+  const mapBadge = document.createElement('span');
+  mapBadge.id = 'map-badge';
+  Object.assign(mapBadge.style,{display:'block',fontSize:'10px',fontWeight:'800',letterSpacing:'.08em',color:'#74e8ff',textTransform:'uppercase',textShadow:'0 1px 4px #000'});
+  document.querySelector('.run-stats').appendChild(mapBadge);
   const keys = new Set(), enemies = [], bullets = [], xpOrbs = [], particles = [], floating = [], companions = [], items = [], jaoTrail = [];
   let jaoTrailTimer = 0;
   const player = { character: 'jao', x: 0, y: 0, vx: 0, vy: 0, speed: 205, hp: 100, maxHp: 100, damage: 20, fireRate: .62, shotSpeed: 440, multishot: 1, pierce: 0, critChance: .05, xpGain: 1.4, level: 1, xp: 0, nextXp: 6, invuln: 0, facing: 0, walk: 0, ult: 0, ultMax: 18, ultRadius: 600, ultDamage: 1, nailPower: 1, nailElement: -1, pickup: 160, companion: 0, companionDamage: .55, companionRate: .82, jaoEvolution: 0, jaoEvolutionPath: null, jaoEvolutionFinal: null, jaoChainDamage: 1, jaoChainRadius: 125, jaoChainStun: .22, jaoTrailDamage: .2, jaoTrailLife: 1.25, jaoTrailWidth: 8, jaoTrailSlow: .75, jaoTrailStun: 0, jaoTrailTick: .55, jaoPulseRadius: 105, jaoPulseDamage: .75, jaoPulseStun: .45, jaoPulseShield: false, aliceEvolution: 0, aliceEvolutionPath: null, aliceEvolutionFinal: null, alicePoisonSpread: 0, alicePoisonRadius: 100, alicePoisonDpsBonus: 1, alicePoisonSlow: 0, aliceSlowDuration: 1, aliceSlowSplash: 0, aliceSlowRadius: 85, aliceSlowStun: 0, aliceSlowDamageBonus: 1, aliceLifeStealBonus: 0, aliceKillHeal: 0, aliceCharmTime: 1, aliceCharmMultiplier: 1.25, aliceCharmSpread: 0, guiEvolution: 0, guiEvolutionPath: null, guiEvolutionFinal: null, guiCloseRange: 135, guiCloseDamageBonus: 0, guiCloseStun: 0, guiRicochets: 0, guiRicochetDamage: .62, guiRicochetRange: 125, guiCardDamageBonus: 0, guiUltimateCardBonus: 0, guiUltimateDamageBonus: 0, guiUltimateStunBonus: 0, guiUltimateSpread: 0, caetanoEvolution: 0, caetanoEvolutionPath: null, caetanoEvolutionFinal: null, caetanoShotBonus: 0, caetanoMathPierce: 0, caetanoUltimateBonus: 0, caetanoUltimateStun: 0, caetanoFormulaRadius: 300, caetanoOperationIndex: 0, thalysEvolution: 0, thalysEvolutionPath: null, thalysEvolutionFinal: null, thalysShotBonus: 0, thalysBallPierce: 0, thalysUltRadius: 190, thalysKnockback: 520, kills: 0, shotFlash: 0, aimX: 1, aimY: 0 };
@@ -151,6 +164,11 @@
   }
   setMode('menu');
   function reset() {
+    const mapOptions = runMaps.filter(map => map.id !== previousMapId);
+    activeMap = mapOptions[Math.floor(Math.random() * mapOptions.length)];
+    previousMapId = activeMap.id;
+    try { localStorage.setItem('junqBulletLastMap', previousMapId); } catch (_) {}
+    bossWave = 0; bossesDefeated = 0;
     elapsed = 0; kills = 0; runStats = { xp: 0, chests: 0, ultimates: 0, upgrades: 0, evolutions: [], bossDefeated: false }; spawnTimer = 0; fireTimer = .25; companionTimer = 0; chestTimer = 55; chest = null; chestProgress = 0; ultimateVfx = null; bossSpawned = false;
     toastCount = 0; batteryReserved = 0; coffeeTimer = 0; shieldHits = 0; doubleXpOrbs = 0; jaoTrail.length = 0; jaoTrailTimer = 0;
     enemies.length = bullets.length = xpOrbs.length = particles.length = floating.length = companions.length = items.length = 0;
@@ -160,6 +178,7 @@
     if (selectedCharacter === 'caetano') Object.assign(player, { speed: 205, damage: 18, fireRate: .68, shotSpeed: 430, ultMax: 23 });
     if (selectedCharacter === 'thalys') Object.assign(player, { speed: 230, damage: 22, fireRate: .72, shotSpeed: 470, ultMax: 20 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
+    showToast(`Mapa sorteado: ${activeMap.name}`);
   }
 
   let lobbyDetailCharacter = null;
@@ -224,18 +243,20 @@
   }
   function emit(x, y, color, count = 7, force = 1) { for (let i = 0; i < count && particles.length < MAX_PARTICLES; i++) { const a = Math.random() * Math.PI * 2, s = rand(35, 150) * force; particles.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(.2, .55), max: .55, color, size: rand(2, 5) }); } }
   function floatText(x, y, text, color = '#fff') { floating.push({ x, y, text, color, life: .8 }); }
-  function spawnEnemy(forcedKind = null) {
+  function spawnEnemy(forcedKind = null, bossIndex = 0) {
     if (enemies.length >= MAX_ENEMIES) return;
     const a = rand(0, Math.PI * 2), r = forcedKind === 'boss' ? Math.min(w, h) * .64 : Math.max(w, h) * .62 + rand(35, 100), t = elapsed;
     const roll = Math.random();
-    let kind = forcedKind || 'blob';
-    if (!forcedKind) { if (t > 14 && roll > .6) kind = 'bat'; if (t > 25 && roll > .79) kind = 'wolf'; if (t > 34 && roll > .91) kind = 'roach'; }
-    const stats = kind === 'boss' ? { hp: 1500 + t * 7, speed: 24, radius: 38, damage: 32, color: '#39d9ff', xp: 30 } :
+    const kind = forcedKind || activeMap.enemyPool[Math.floor(roll * activeMap.enemyPool.length)];
+    const elite = !forcedKind && t > 28 && Math.random() < Math.min(.18, .055 + t * .00035);
+    const bossInfo = forcedKind === 'boss' ? activeMap.bosses[bossIndex] : null;
+    const stats = kind === 'boss' ? { hp: (bossIndex ? 1850 : 1500) + t * 7, speed: bossIndex ? 27 : 24, radius: bossIndex ? 42 : 38, damage: bossIndex ? 34 : 32, color: activeMap.accent, xp: bossIndex ? 40 : 30 } :
       kind === 'roach' ? { hp: 205 + t * 1.5, speed: 27, radius: 27, damage: 24, color: '#df7a33', xp: 7 } :
       kind === 'wolf' ? { hp: 145 + t * 1.25, speed: 50, radius: 23, damage: 19, color: '#cf7750', xp: 6 } :
       kind === 'bat' ? { hp: 34 + t * .22, speed: 88, radius: 12, damage: 10, color: '#bb78ff', xp: 2 } :
       { hp: 46 + t * .4, speed: 48, radius: 15, damage: 12, color: '#e95d70', xp: 2 };
-    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, hit: 0, wobble: rand(0, 8), bossAttackCooldown: 3.2, bossAttackWindup: 0, bossAttackCount: 0, bossAttackType: 'slam', bossAimX: 0, bossAimY: 0, bossAttackRadius: 152 });
+    if (elite) { stats.hp *= 1.8; stats.damage *= 1.12; stats.radius *= 1.18; stats.xp *= 2; }
+    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, elite, name: kind === 'boss' ? bossInfo.name : elite ? activeMap.elites[Math.floor(Math.random() * activeMap.elites.length)] : activeMap.enemyNames[kind], mapHue: kind === 'boss' ? bossInfo.hue : activeMap.hue, hit: 0, wobble: rand(0, 8), bossAttackCooldown: 3.2, bossAttackWindup: 0, bossAttackCount: bossIndex, bossAttackType: 'slam', bossAimX: 0, bossAimY: 0, bossAttackRadius: 152 });
   }
   function damagePlayer(amount) {
     if (player.invuln > 0 || state !== 'running') return false;
@@ -460,7 +481,7 @@
       }
     }
   }
-  function defeat(e) { if (e.defeated) return; e.defeated = true; if (e.kind === 'boss') runStats.bossDefeated = true; if (player.character === 'alice' && player.aliceEvolutionPath === 'lifesteal' && e.aliceLifestealMark && player.aliceKillHeal > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.aliceKillHeal); kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
+  function defeat(e) { if (e.defeated) return; e.defeated = true; if (e.kind === 'boss') { runStats.bossDefeated = true; bossesDefeated++; } if (player.character === 'alice' && player.aliceEvolutionPath === 'lifesteal' && e.aliceLifestealMark && player.aliceKillHeal > 0) player.hp = Math.min(player.maxHp, player.hp + player.maxHp * player.aliceKillHeal); kills++; player.kills++; emit(e.x, e.y, e.color, 9); if (xpOrbs.length >= MAX_XP_ORBS) xpOrbs.shift(); xpOrbs.push({ x: e.x, y: e.y, value: e.xp, r: 6, phase: rand(0, 6) }); sound(250 + Math.random() * 100, .05, 'square', .012); }
   function vulnerabilityMultiplier(enemy) { return enemy.vulnerableTimer > 0 ? (player.character === 'alice' && player.aliceEvolutionPath === 'charm' ? player.aliceCharmMultiplier : 1.25) : 1; }
   function chainShock(first, baseDamage) {
     const linked = [first], targets = [];
@@ -816,7 +837,12 @@
       while (jaoTrail.length > 28) jaoTrail.shift();
     }
     spawnTimer -= dt; const spawnEvery = Math.max(.28, 1.2 - elapsed * .004); if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = spawnEvery; if (elapsed > 70 && Math.random() < .22) spawnEnemy(); }
-    if (!bossSpawned && elapsed >= 45 && enemies.length < MAX_ENEMIES) { bossSpawned = true; spawnEnemy('boss'); showToast('O REI DO POSTE apareceu!'); sound(180, .5, 'sawtooth', .06); }
+    const bossTimes = [45, 112];
+    if (bossWave < bossTimes.length && elapsed >= bossTimes[bossWave] && enemies.length < MAX_ENEMIES) {
+      const currentBoss = activeMap.bosses[bossWave];
+      bossSpawned = true; spawnEnemy('boss', bossWave); bossWave++;
+      showToast(`${currentBoss.name} apareceu!`); sound(180, .5, 'sawtooth', .06);
+    }
     fireTimer -= dt; if (fireTimer <= 0) { const target = nearestEnemy(); if (player.character === 'gui') { fireCardVolley(target); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } else if (player.character === 'thalys') { if (fireThalysBall(target)) fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } else { const element = player.character === 'alice' && player.nailElement >= 0 ? aliceElements[player.nailElement] : null; const color = player.character === 'alice' ? (element?.color || '#e8e0e8') : player.character === 'caetano' ? '#59ddff' : '#54dcff'; fire(target, player.damage, player.shotSpeed, color, player.multishot, element, player.character === 'alice'); fireTimer = player.fireRate / (coffeeTimer > 0 ? 1.2 : 1); } }
     if (player.companion) { companionTimer -= dt; if (companionTimer <= 0) { for (const c of companions) { const origin = petWorldPosition(c); fire(nearestEnemy(origin), player.damage * player.companionDamage, player.shotSpeed * .86, '#b98cff', 1, null, false, origin); } companionTimer = player.companionRate; } for (const c of companions) c.angle += dt * 1.1; }
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -928,15 +954,15 @@
   function gameOver() {
     player.hp = 0; $('final-time').textContent = fmt(elapsed); $('final-kills').textContent = kills; $('final-level').textContent = player.level;
     $('final-xp').textContent = runStats.xp; $('final-chests').textContent = runStats.chests; $('final-ults').textContent = runStats.ultimates;
-    $('final-title').textContent = runStats.bossDefeated ? 'O Rei do Poste caiu!' : 'A horda levou essa.';
-    $('final-boss').textContent = runStats.bossDefeated ? 'Chefe derrotado: Rei do Poste.' : bossSpawned ? 'O Rei do Poste escapou desta vez.' : 'O Rei do Poste não chegou a aparecer.';
+    $('final-title').textContent = runStats.bossDefeated ? 'Você derrubou um chefe!' : 'A horda levou essa.';
+    $('final-boss').textContent = `${activeMap.name}: ${bossesDefeated}/${activeMap.bosses.length} chefes derrotados.`;
     $('final-evolutions').textContent = `Melhorias escolhidas: ${runStats.upgrades}. Evoluções: ${runStats.evolutions.length ? runStats.evolutions.join(' → ') : 'nenhuma nesta run'}.`;
     try { const best = Math.max(Number(localStorage.getItem('junqBulletBest') || 0), Math.floor(elapsed)); localStorage.setItem('junqBulletBest', String(best)); } catch (_) {}
     setMode('gameover');
   }
   function updateHud() {
     ui.health.style.width = `${Math.max(0, player.hp / player.maxHp * 100)}%`; ui.healthText.textContent = `${Math.max(0, Math.ceil(player.hp))} / ${player.maxHp}`;
-    ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills;
+    ui.xp.style.width = `${player.xp / player.nextXp * 100}%`; ui.level.textContent = player.level; ui.timer.textContent = fmt(elapsed); ui.kills.textContent = kills; mapBadge.textContent = activeMap.name; mapBadge.style.color = activeMap.accent;
     ui.ult.disabled = player.ult > 0; ui.ult.style.setProperty('--cooldown', player.ult > 0 ? .68 : 0); ui.ultFill.style.opacity = player.ult > 0 ? '.7' : '0'; ui.ultFill.style.clipPath = `inset(${100 - (1 - player.ult / player.ultMax) * 100}% 0 0 0)`;
     ui.desktopUltFill.style.width = `${clamp((1 - player.ult / player.ultMax) * 100, 0, 100)}%`; ui.desktopUltStatus.textContent = player.ult > 0 ? `${Math.ceil(player.ult)}S` : 'PRONTA'; ui.desktopUlt.classList.toggle('is-charging', player.ult > 0);
     const element = player.nailElement >= 0 ? aliceElements[player.nailElement] : null;
@@ -954,6 +980,35 @@
     ctx.fillStyle = '#17211f'; ctx.fillRect(0, 0, w, h);
     const size = floorSize, ox = ((-player.x % size) + size) % size, oy = ((-player.y % size) + size) % size;
     ctx.save(); ctx.translate(ox, oy); ctx.fillStyle = floorPattern; ctx.fillRect(-ox, -oy, w + size, h + size); ctx.restore();
+    ctx.save(); ctx.globalAlpha = .85; ctx.fillStyle = activeMap.wash; ctx.fillRect(0, 0, w, h); ctx.restore();
+    drawMapDetails();
+  }
+  function mapHash(x, y) {
+    let n = Math.imul((x | 0) ^ (activeMap.id.length * 7919), 374761393) + Math.imul((y | 0) ^ (activeMap.hue * 127), 668265263);
+    n = Math.imul(n ^ (n >>> 13), 1274126177); return ((n ^ (n >>> 16)) >>> 0) / 4294967295;
+  }
+  function drawMapDetails() {
+    const cell = 260, left = Math.floor((player.x - w / 2) / cell), top = Math.floor((player.y - h / 2) / cell);
+    ctx.save(); ctx.lineWidth = 2;
+    for (let gy = top; gy <= Math.floor((player.y + h / 2) / cell); gy++) for (let gx = left; gx <= Math.floor((player.x + w / 2) / cell); gx++) {
+      const chance = mapHash(gx, gy); if (chance < .2) continue;
+      const x = gx * cell - player.x + w / 2 + 28 + mapHash(gx + 19, gy + 7) * 160;
+      const y = gy * cell - player.y + h / 2 + 26 + mapHash(gx + 3, gy + 29) * 150;
+      ctx.globalAlpha = .18 + chance * .14; ctx.strokeStyle = activeMap.accent; ctx.fillStyle = activeMap.accent;
+      if (activeMap.motif === 'rain') {
+        ctx.beginPath(); ctx.ellipse(x, y, 24 + chance * 18, 7 + chance * 4, chance * 2, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x - 12, y); ctx.lineTo(x + 10, y - 1); ctx.stroke();
+      } else if (activeMap.motif === 'spores') {
+        for (let i = 0; i < 3; i++) { const mx = x + (i - 1) * 9; ctx.fillRect(mx - 1, y - 2, 2, 9); ctx.beginPath(); ctx.arc(mx, y - 4 - (i % 2) * 3, 5, Math.PI, Math.PI * 2); ctx.fill(); }
+      } else if (activeMap.motif === 'water') {
+        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.ellipse(x, y + i * 5, 8 + i * 7, 2, 0, 0, Math.PI * 2); ctx.stroke(); }
+      } else if (activeMap.motif === 'arcade') {
+        for (let i = 0; i < 5; i++) if (mapHash(gx + i * 11, gy - i * 13) > .38) ctx.fillRect(x + (i % 3) * 6, y + Math.floor(i / 3) * 6, 3, 3);
+      } else {
+        ctx.strokeRect(x - 17, y - 10, 34, 20); ctx.beginPath(); ctx.moveTo(x - 2, y - 9); ctx.lineTo(x - 2, y + 9); ctx.moveTo(x - 16, y); ctx.lineTo(x + 16, y); ctx.stroke();
+      }
+    }
+    ctx.restore();
   }
   function screenPos(o) { return { x: o.x - player.x + w / 2, y: o.y - player.y + h / 2 }; }
   function drawJaoTrail() {
@@ -1149,9 +1204,13 @@
     const drawWidth = sprite?.naturalWidth ? sprite.naturalWidth * scale : size, drawHeight = sprite?.naturalHeight ? sprite.naturalHeight * scale : size;
     ctx.save(); ctx.translate(p.x, p.y + bob);
     if (sprite?.complete && sprite.naturalWidth) {
-      ctx.globalAlpha = e.hit ? .72 : 1;
+      ctx.globalAlpha = e.hit ? .72 : 1; ctx.filter = `hue-rotate(${e.mapHue || 0}deg) saturate(1.18)`;
       ctx.drawImage(sprite, -drawWidth / 2, -drawHeight * .58, drawWidth, drawHeight);
-      ctx.globalAlpha = 1;
+      ctx.filter = 'none'; ctx.globalAlpha = 1;
+      if (e.elite) {
+        ctx.strokeStyle = activeMap.accent; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 2, r + 3, r * .72, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = activeMap.accent; ctx.fillRect(-2, -drawHeight * .64, 4, 4);
+      }
       if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
     } else {
       const statusColor = e.poisonTimer > 0 ? '#78ed6f' : e.slowTimer > 0 ? '#66caff' : e.vulnerableTimer > 0 ? '#ff79c8' : e.color;
@@ -1161,6 +1220,9 @@
       ctx.fillStyle = '#17202a'; ctx.fillRect(-r * .45, -r * .14, 3, 4); ctx.fillRect(r * .18, -r * .14, 3, 4); ctx.fillStyle = '#fff'; ctx.fillRect(-r * .38, -r * .12, 1, 1);
     }
     ctx.restore();
+    if ((e.kind === 'boss' || e.elite) && p.x > -120 && p.x < w + 120 && p.y > -100 && p.y < h + 100) {
+      ctx.save(); ctx.font = e.kind === 'boss' ? 'bold 11px system-ui' : 'bold 9px system-ui'; ctx.textAlign = 'center'; ctx.fillStyle = e.kind === 'boss' ? activeMap.accent : '#f5d278'; ctx.shadowColor = '#000'; ctx.shadowBlur = 4; ctx.fillText(e.name, p.x, p.y - drawHeight * .62 - 11); ctx.restore();
+    }
     if (e.kind === 'boss' && e.bossAttackWindup > 0) {
       const blink = .42 + Math.sin(elapsed * 18) * .2; ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = blink;
       ctx.strokeStyle = '#ff506e'; ctx.fillStyle = '#ff506e';
