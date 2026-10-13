@@ -161,13 +161,41 @@
     if (selectedCharacter === 'thalys') Object.assign(player, { speed: 230, damage: 22, fireRate: .72, shotSpeed: 470, ultMax: 20 });
     ui.chest.classList.add('hidden'); ui.pickup.classList.add('hidden'); setMode('running'); updateHud();
   }
-  $('start-button').addEventListener('click', () => setMode('select'));
+
+  let lobbyDetailCharacter = null;
+  function openLobbyDetail(character) {
+    const card = $(`character-${character}`);
+    lobbyDetailCharacter = character;
+    const names = { jao:'JÃO', alice:'ALICE', gui:'GUI', caetano:'CAETANO', thalys:'THALYS' };
+    $('lobby-detail-name').textContent = names[character];
+    $('lobby-detail-class').textContent = card.querySelector('.character-weapon').textContent;
+    $('lobby-detail-description').textContent = card.querySelector('.character-description').textContent;
+    $('lobby-detail-art').className = `lobby-detail-art character-art-${character}`;
+    $('lobby-detail').classList.remove('hidden');
+  }
+  function closeLobbyDetail() { $('lobby-detail').classList.add('hidden'); lobbyDetailCharacter = null; }
+  $('lobby-detail-close').addEventListener('click', closeLobbyDetail);
+  $('lobby-choose').addEventListener('click', () => {
+    if (!lobbyDetailCharacter) return;
+    selectCharacter(lobbyDetailCharacter);
+    $('lobby-detail').classList.add('hidden');
+    $('lobby-door').classList.add('unlocked');
+    $('lobby-door-status').textContent = 'LIBERADA · ENTRE NA ARENA';
+    $('lobby-enter').disabled = false;
+    $('lobby-enter').textContent = `ENTRAR NA ARENA COM ${lobbyDetailCharacter.toUpperCase()}  ↗`;
+  });
+  $('lobby-enter').addEventListener('click', () => {
+    if (!selectedCharacter) return;
+    audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
+    reset();
+  });
+  $('start-button').addEventListener('click', () => { $('lobby-door').classList.remove('unlocked'); $('lobby-door-status').textContent = 'ESCOLHA UM SOBREVIVENTE'; $('lobby-enter').disabled = true; $('lobby-enter').textContent = 'ESCOLHA UM PERSONAGEM PARA LIBERAR A PORTA'; setMode('select'); });
   $('back-to-menu').addEventListener('click', () => setMode('menu'));
-  $('character-jao').addEventListener('click', () => selectCharacter('jao'));
-  $('character-alice').addEventListener('click', () => selectCharacter('alice'));
-  $('character-gui').addEventListener('click', () => selectCharacter('gui'));
-  $('character-caetano').addEventListener('click', () => selectCharacter('caetano'));
-  $('character-thalys').addEventListener('click', () => selectCharacter('thalys'));
+  $('character-jao').addEventListener('click', () => openLobbyDetail('jao'));
+  $('character-alice').addEventListener('click', () => openLobbyDetail('alice'));
+  $('character-gui').addEventListener('click', () => openLobbyDetail('gui'));
+  $('character-caetano').addEventListener('click', () => openLobbyDetail('caetano'));
+  $('character-thalys').addEventListener('click', () => openLobbyDetail('thalys'));
   $('play-button').addEventListener('click', () => { audioCtx ||= new (window.AudioContext || window.webkitAudioContext)(); reset(); });
   $('retry-button').addEventListener('click', reset);
   $('resume-button').addEventListener('click', () => setMode('running'));
