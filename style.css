@@ -213,3 +213,6 @@
   .character-panel{max-height:calc(100dvh - 16px)}
   .character-card .character-art,#character-jao .character-art-jao{height:96px}
 }
+
+/* Partida mobile em paisagem: pausa e orienta em retrato para manter escala legível. */
+.orientation-warning{position:fixed;z-index:50;inset:0;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 40%,#152844f5,#070b12f8 72%);backdrop-filter:blur(8px);text-align:center}.orientation-card{width:min(420px,100%);padding:32px 26px;border:1px solid #67dfff55;border-radius:22px;background:linear-gradient(145deg,#172437,#10151f);box-shadow:0 20px 70px #000b,0 0 40px #28bfff1c}.orientation-icon{display:grid;place-items:center;width:70px;height:70px;margin:0 auto 16px;border:2px solid #62dcff;border-radius:18px;color:#72e2ff;font-size:42px;transform:rotate(-90deg);box-shadow:0 0 24px #27bfff45}.orientation-card>b{display:block;color:#f4f8ff;font-size:clamp(21px,6vw,30px);letter-spacing:.1em}.orientation-card p{margin:12px 0 0;color:#bdc9d7;font-size:15px;line-height:1.6}
