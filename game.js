@@ -191,7 +191,7 @@
     audioCtx ||= new (window.AudioContext || window.webkitAudioContext)();
     reset();
   });
-  $('start-button').addEventListener('click', () => { $('lobby-door').classList.remove('unlocked'); $('lobby-door-status').textContent = 'ESCOLHA UM SOBREVIVENTE'; $('lobby-enter').disabled = true; $('lobby-enter').textContent = 'ESCOLHA UM PERSONAGEM PARA LIBERAR A PORTA'; setMode('select'); });
+  $('start-button').addEventListener('click', () => { $('lobby-door').classList.remove('unlocked'); $('lobby-door-status').textContent = 'ESCOLHA UM SOBREVIVENTE'; $('lobby-enter').disabled = true; $('lobby-enter').textContent = 'ESCOLHA UM PERSONAGEM PARA LIBERAR A PORTA'; $('lobby-player-avatar').classList.remove('active'); setMode('select'); });
   $('back-to-menu').addEventListener('click', () => setMode('menu'));
   $('character-jao').addEventListener('click', () => openLobbyDetail('jao'));
   $('character-alice').addEventListener('click', () => openLobbyDetail('alice'));
