@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
   <meta name="theme-color" content="#11151d">
   <title>Junq Bullet</title>
-  <link rel="stylesheet" href="style.css?v=lobby4">
+  <link rel="stylesheet" href="style.css?v=portrait1">
 </head>
 <body>
   <canvas id="game" aria-label="Junq Bullet, jogo de sobrevivência"></canvas>
@@ -45,7 +45,7 @@
     </section>
     <section id="character-select" class="panel hidden character-panel lobby-room">
       <header class="lobby-header"><div><div class="eyebrow">BASE DOS SOBREVIVENTES</div><h2>Quem vai encarar a horda?</h2></div><button id="back-to-menu" class="secondary-button lobby-back" type="button">VOLTAR</button></header>
-      <p class="lobby-hint">Toque em um sobrevivente para ver sua ficha. Escolha alguém para liberar a saída.</p>
+      <p class="lobby-hint">Toque em um sobrevivente para ver sua arte e conhecer suas habilidades.</p>
       <div class="lobby-room-scene" role="group" aria-label="Sala de convivência dos sobreviventes"><img class="lobby-scene-art" src="assets/junq-bullet-lobby.webp" alt="" aria-hidden="true">
         <button id="character-jao" class="lobby-hotspot hotspot-jao" type="button" aria-label="Ver Jão" aria-pressed="true">
           <span class="character-weapon sr-only">CHOQUE EM CADEIA</span><span class="character-description sr-only">Mais ágil que os outros. Seu tiro elétrico conecta até três inimigos; nos níveis 10 e 20, escolhe evoluções com visuais e poderes próprios.</span><span class="character-selected-label sr-only">SELECIONADO</span>
@@ -62,16 +62,13 @@
         <button id="character-thalys" class="lobby-hotspot hotspot-thalys" type="button" aria-label="Ver Thalys" aria-pressed="false">
           <span class="character-weapon sr-only">FUTEVÔLEI DE ARENA</span><span class="character-description sr-only">Lança uma bola de futevôlei que bate no inimigo e volta para Thalys, causando um leve recuo. A Peitada de Rede afasta os inimigos próximos. Evolui nos níveis 10 e 20 com rotas de saque, ace e bloqueio.</span><span class="character-selected-label sr-only">SELECIONAR THALYS</span>
         </button>
-        <div id="lobby-player-avatar" class="lobby-player-avatar" aria-label="Personagem selecionado"></div>
-        <div class="lobby-door-locked" id="lobby-door" aria-hidden="true"><span class="door-icon">▥</span><b>PORTA DA ARENA</b><small id="lobby-door-status">ESCOLHA UM SOBREVIVENTE</small></div>
-        <button id="lobby-enter" class="lobby-enter-door" type="button" disabled aria-label="Escolha um personagem para liberar a porta"><span>ARENA</span><small>TRANCADA</small></button>
       </div>
       <button id="play-button" class="hidden" type="button">JOGAR</button>
       <div id="lobby-detail" class="lobby-detail hidden" role="dialog" aria-modal="true" aria-labelledby="lobby-detail-name">
         <button id="lobby-detail-close" class="lobby-close" type="button" aria-label="Fechar">×</button>
         <div id="lobby-detail-art" class="lobby-detail-art"></div><div class="eyebrow">DOSSIÊ DO SOBREVIVENTE</div>
         <h2 id="lobby-detail-name"></h2><b id="lobby-detail-class"></b><p id="lobby-detail-description"></p>
-        <button id="lobby-choose" class="primary" type="button">ESCOLHER PERSONAGEM</button>
+        <button id="lobby-choose" class="primary" type="button">CONFIRMAR E JOGAR</button>
       </div>
     </section>
     <section id="upgrade-panel" class="panel hidden">
