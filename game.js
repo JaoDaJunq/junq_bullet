@@ -178,6 +178,8 @@
   $('lobby-choose').addEventListener('click', () => {
     if (!lobbyDetailCharacter) return;
     selectCharacter(lobbyDetailCharacter);
+    $('lobby-player-avatar').style.backgroundImage = `url('assets/${lobbyDetailCharacter}-walk.png')`;
+    $('lobby-player-avatar').classList.add('active');
     $('lobby-detail').classList.add('hidden');
     $('lobby-door').classList.add('unlocked');
     $('lobby-door-status').textContent = 'LIBERADA · ENTRE NA ARENA';
