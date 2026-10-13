@@ -289,3 +289,10 @@
 /* Hot areas stay visually clear so the artwork characters remain unobstructed. */
 .lobby-room-scene .lobby-hotspot,.lobby-room-scene .lobby-hotspot:hover,.lobby-room-scene .lobby-hotspot:focus-visible,.lobby-room-scene .lobby-hotspot.selected{appearance:none;-webkit-appearance:none;background:transparent!important;border:0!important;box-shadow:none!important;outline:none!important}
 .lobby-room-scene .lobby-hotspot:hover:after,.lobby-room-scene .lobby-hotspot:focus-visible:after,.lobby-room-scene .lobby-hotspot.selected:after{opacity:1}
+
+/* Approved concept portraits used in the individual character dossier. */
+.lobby-detail-art.character-poster-jao{background-image:url("assets/jao-selection-poster.webp?v=character-art-20261011")!important;background-position:center 31%;background-size:cover}
+.lobby-detail-art.character-poster-alice{background-image:url("assets/alice-selection-poster.webp?v=character-art-20261011")!important;background-position:center 25%;background-size:cover}
+.lobby-detail-art.character-poster-gui{background-image:url("assets/gui-selection-poster.webp?v=character-art-20261011")!important;background-position:center 25%;background-size:cover}
+.lobby-detail-art.character-poster-caetano{background-image:url("assets/caetano-selection-poster-final.webp?v=caetano-math-final-20261011")!important;background-position:center 25%;background-size:cover}
+.lobby-detail-art.character-poster-thalys{background-image:url("assets/thalys-selection-poster.webp?v=character-art-20261011")!important;background-position:center 25%;background-size:cover}
