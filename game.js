@@ -100,17 +100,11 @@
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.imageSmoothingEnabled = false;
   }
-  resize();
+  addEventListener('resize', resize); resize();
   const mobile = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
   const frameInterval = mobile ? 1000 / 30 : 1000 / 60;
   const portraitQuery = matchMedia('(orientation: portrait)');
-  const orientationWarning = document.getElementById('orientation-warning');
-  function updateOrientationWarning() {
-    orientationWarning.classList.toggle('hidden', !(mobile && portraitQuery.matches && state === 'running'));
-  }
-  function handleViewportChange() { resize(); updateOrientationWarning(); }
-  addEventListener('resize', handleViewportChange);
-  addEventListener('orientationchange', handleViewportChange);
+  addEventListener('orientationchange', resize);
   const controlSettings = { size: 116, position: 24, side: 'left', autoUltimate: false };
   try {
     const saved = JSON.parse(localStorage.getItem('junqBulletControls') || '{}');
@@ -143,7 +137,6 @@
     ui.joystick.classList.toggle('hidden', !mobile || next !== 'running'); ui.ult.classList.toggle('hidden', !mobile || next !== 'running');
     ui.desktopUlt.classList.toggle('hidden', mobile || next !== 'running');
     ui.toastUse.classList.toggle('hidden', next !== 'running' || toastCount <= 0);
-    updateOrientationWarning();
   }
   function selectCharacter(character) {
     selectedCharacter = character;
@@ -1302,7 +1295,9 @@
     if (boss) drawObjectiveArrow(boss, '#65ddeb', boss.radius * 2 + 12);
   }
   function render() {
-    ctx.setTransform(dpr,0,0,dpr,0,0); drawFloor(); drawJaoTrail();
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if (mobile && portraitQuery.matches) { ctx.translate(w / 2, h / 2); ctx.scale(1.45, 1.45); ctx.translate(-w / 2, -h / 2); }
+    drawFloor(); drawJaoTrail();
     for(const o of xpOrbs){const p=screenPos(o);ctx.fillStyle='#74e4ff';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.PI/4);ctx.fillRect(-5,-5,10,10);ctx.restore();}
     drawChest(); for(const item of items) drawItem(item); for(const b of bullets) drawBullet(b);
     for(const e of enemies)drawEnemy(e); drawUltimate(); for(const p of particles){const q=screenPos(p);ctx.globalAlpha=clamp(p.life/(p.max||.55),0,1);ctx.fillStyle=p.color;ctx.fillRect(q.x,q.y,p.size,p.size);}ctx.globalAlpha=1;
@@ -1312,7 +1307,6 @@
     requestAnimationFrame(loop);
     if (state !== 'running' && !needsRender) return;
     if (t - last < frameInterval - 1) return;
-    if (state === 'running' && mobile && portraitQuery.matches) { last = t; return; }
     const dt = Math.min(.05, (t - last) / 1000 || 0); last = t;
     if (state === 'running') update(dt);
     render(); needsRender = false;
