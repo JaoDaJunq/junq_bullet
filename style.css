@@ -182,3 +182,34 @@
 #character-thalys{--char-accent:#83e765}
 #character-thalys .character-art-thalys{background-image:url('assets/thalys-selection-poster.webp?v=character-art-20261011');background-position:center 25%;border-color:#83e76570}
 @media(max-width:650px){.character-card .character-art{height:194px}#character-jao .character-art-jao{height:207px}}
+
+
+/* Ajuste mobile: seleção sem faixa horizontal e pôsteres proporcionais. */
+@media(max-width:650px){
+  .screen{overflow-y:auto;place-items:center;padding:12px 0}
+  .panel{width:calc(100vw - 24px);max-height:calc(100dvh - 24px)}
+  .character-panel{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:19px 11px 14px;overflow-x:hidden;overflow-y:auto}
+  .character-panel h2{font-size:clamp(20px,5.4vw,27px);margin:8px 0 12px}
+  .character-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible;padding:4px 3px 8px;scroll-snap-type:none}
+  .character-card{width:100%;min-width:0;min-height:0;flex:none;gap:5px;padding:8px 7px;border-width:1px}
+  #character-jao{width:100%;grid-column:auto;flex-basis:auto}
+  .character-card .character-art{width:100%;height:clamp(100px,31vw,138px);margin:0 0 2px;border-radius:3px}
+  #character-jao .character-art-jao{height:clamp(100px,31vw,138px);background-position:center 31%}
+  .character-card .character-name{font-size:clamp(14px,4vw,17px)}
+  .character-card .character-weapon{font-size:7px;letter-spacing:.08em}
+  .character-card .character-description{min-height:0;font-size:clamp(8px,2.55vw,10px);line-height:1.35}
+  .character-card .character-selected-label{font-size:7px}
+  .character-actions{margin-top:12px}
+}
+@media(max-width:380px){
+  .character-panel{padding:17px 8px 12px}
+  .character-grid{gap:6px;padding-inline:1px}
+  .character-card{padding:7px 5px;gap:4px}
+  .character-card .character-art,#character-jao .character-art-jao{height:104px}
+  .character-card .character-description{font-size:8px}
+}
+@media(max-height:640px) and (max-width:650px){
+  .screen{place-items:start center}
+  .character-panel{max-height:calc(100dvh - 16px)}
+  .character-card .character-art,#character-jao .character-art-jao{height:96px}
+}
