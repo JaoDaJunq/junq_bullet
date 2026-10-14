@@ -91,8 +91,6 @@
       charm: { 1: loadEvolutionAtlas('alice-charm-stage1'), 2: loadEvolutionAtlas('alice-charm-stage2') }
     }
   };
-  const enemySprites = {};
-  for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
   const loadMapAtlas = (path) => { const image = new Image(); fetch(path).then(response => { if (!response.ok) throw new Error('Map asset unavailable'); return response.text(); }).then(encoded => { image.src = `data:image/webp;base64,${encoded.trim()}`; }).catch(() => {}); return image; };
   const mapMonsterAtlases = Object.fromEntries(runMaps.map(map => [map.id, loadMapAtlas(map.spriteAtlas)]));
   const mapPropAtlases = Object.fromEntries(runMaps.map(map => [map.id, loadMapAtlas(map.propAtlas)]));
@@ -1212,7 +1210,7 @@
   }
   function drawEnemy(e) {
     const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius;
-    const atlas = mapMonsterAtlases[activeMap.id], sprite = enemySprites[e.kind];
+    const atlas = mapMonsterAtlases[activeMap.id];
     const size = e.kind === 'boss' ? 132 : e.elite ? 82 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 54;
     const drawWidth = size, drawHeight = size;
     ctx.save(); ctx.translate(p.x, p.y + bob);
@@ -1228,11 +1226,6 @@
         ctx.fillStyle = activeMap.accent; ctx.fillRect(-2, -drawHeight * .64, 4, 4);
       }
       if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
-    } else if (sprite?.complete && sprite.naturalWidth) {
-      const scale = size / Math.max(sprite.naturalWidth, sprite.naturalHeight);
-      ctx.globalAlpha = e.hit ? .72 : 1;
-      ctx.drawImage(sprite, -sprite.naturalWidth * scale / 2, -sprite.naturalHeight * scale * .58, sprite.naturalWidth * scale, sprite.naturalHeight * scale);
-      ctx.globalAlpha = 1;
     } else {
       const statusColor = e.poisonTimer > 0 ? '#78ed6f' : e.slowTimer > 0 ? '#66caff' : e.vulnerableTimer > 0 ? '#ff79c8' : e.color;
       ctx.fillStyle = e.stun > 0 ? '#83efff' : e.hit ? '#fff' : statusColor;
