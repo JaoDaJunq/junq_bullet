@@ -54,11 +54,11 @@
   let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const runMaps = [
-    { id:'rain-alley', name:'Beco das Chuvas', motif:'rain', wash:'rgba(25,92,125,.2)', accent:'#58d9ff', hue:12, enemyPool:['blob','bat','wolf','roach'], enemyNames:{blob:'Gosma de Sarjeta',bat:'Morcego do Fio',wolf:'Rato de Beco',roach:'Barata Blindada'}, elites:['Rato Barrigudo','Barata Blindada'], bosses:[{name:'Mestre do Bueiro',hue:0},{name:'Enxurrada Viva',hue:85}] },
-    { id:'spore-square', name:'Praça dos Esporos', motif:'spores', wash:'rgba(70,111,61,.22)', accent:'#a9f36c', hue:72, enemyPool:['blob','blob','bat','wolf','roach'], enemyNames:{blob:'Gosma Esporulada',bat:'Mariposa de Esporos',wolf:'Rastejante de Raiz',roach:'Besouro-Musgo'}, elites:['Caranguejo de Raiz','Cogumelo Couraçado'], bosses:[{name:'Rainha Esporo',hue:0},{name:'O Jardineiro',hue:115}] },
-    { id:'flooded-gallery', name:'Galeria Submersa', motif:'water', wash:'rgba(18,94,134,.23)', accent:'#5de8ed', hue:165, enemyPool:['bat','roach','blob','roach','wolf'], enemyNames:{blob:'Mímico de Sacola',bat:'Enguia Elétrica',wolf:'Caranguejo de Dreno',roach:'Barata D’Água'}, elites:['Enguia de Neon','Mímico Gigante'], bosses:[{name:'Tubarão do Subsolo',hue:0},{name:'Trem Fantasma',hue:75}] },
-    { id:'dead-arcade', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
-    { id:'underpass-court', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
+    { id:'rain-alley', spriteAtlas:'assets/monsters-rain-alley.png.b64.txt', name:'Beco das Chuvas', motif:'rain', wash:'rgba(25,92,125,.2)', accent:'#58d9ff', hue:12, enemyPool:['blob','bat','wolf','roach'], enemyNames:{blob:'Gosma de Sarjeta',bat:'Morcego do Fio',wolf:'Rato de Beco',roach:'Barata Blindada'}, elites:['Rato Barrigudo','Barata Blindada'], bosses:[{name:'Mestre do Bueiro',hue:0},{name:'Enxurrada Viva',hue:85}] },
+    { id:'spore-square', spriteAtlas:'assets/monsters-spore-square.png.b64.txt', name:'Praça dos Esporos', motif:'spores', wash:'rgba(70,111,61,.22)', accent:'#a9f36c', hue:72, enemyPool:['blob','blob','bat','wolf','roach'], enemyNames:{blob:'Gosma Esporulada',bat:'Mariposa de Esporos',wolf:'Rastejante de Raiz',roach:'Besouro-Musgo'}, elites:['Caranguejo de Raiz','Cogumelo Couraçado'], bosses:[{name:'Rainha Esporo',hue:0},{name:'O Jardineiro',hue:115}] },
+    { id:'flooded-gallery', spriteAtlas:'assets/monsters-flooded-gallery.png.b64.txt', name:'Galeria Submersa', motif:'water', wash:'rgba(18,94,134,.23)', accent:'#5de8ed', hue:165, enemyPool:['bat','roach','blob','roach','wolf'], enemyNames:{blob:'Mímico de Sacola',bat:'Enguia Elétrica',wolf:'Caranguejo de Dreno',roach:'Barata D’Água'}, elites:['Enguia de Neon','Mímico Gigante'], bosses:[{name:'Tubarão do Subsolo',hue:0},{name:'Trem Fantasma',hue:75}] },
+    { id:'dead-arcade', spriteAtlas:'assets/monsters-dead-arcade.png.b64.txt', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
+    { id:'underpass-court', spriteAtlas:'assets/monsters-underpass-court.png.b64.txt', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
   ];
   let activeMap = runMaps[0], bossWave = 0, bossesDefeated = 0, previousMapId = '';
   try { previousMapId = localStorage.getItem('junqBulletLastMap') || ''; } catch (_) {}
@@ -93,6 +93,7 @@
   };
   const enemySprites = {};
   for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
+  const mapMonsterAtlases = Object.fromEntries(runMaps.map(map => { const image = new Image(); fetch(map.spriteAtlas).then(response => response.text()).then(encoded => { image.src = `data:image/png;base64,${encoded.trim()}`; }).catch(() => {}); return [map.id, image]; }));
   const toastSprite = new Image();
   toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
@@ -256,7 +257,7 @@
       kind === 'bat' ? { hp: 34 + t * .22, speed: 88, radius: 12, damage: 10, color: '#bb78ff', xp: 2 } :
       { hp: 46 + t * .4, speed: 48, radius: 15, damage: 12, color: '#e95d70', xp: 2 };
     if (elite) { stats.hp *= 1.8; stats.damage *= 1.12; stats.radius *= 1.18; stats.xp *= 2; }
-    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, elite, name: kind === 'boss' ? bossInfo.name : elite ? activeMap.elites[Math.floor(Math.random() * activeMap.elites.length)] : activeMap.enemyNames[kind], mapHue: kind === 'boss' ? bossInfo.hue : activeMap.hue, hit: 0, wobble: rand(0, 8), bossAttackCooldown: 3.2, bossAttackWindup: 0, bossAttackCount: bossIndex, bossAttackType: 'slam', bossAimX: 0, bossAimY: 0, bossAttackRadius: 152 });
+    enemies.push({ x: player.x + Math.cos(a) * r, y: player.y + Math.sin(a) * r, ...stats, max: stats.hp, kind, elite, name: kind === 'boss' ? bossInfo.name : elite ? activeMap.elites[Math.floor(Math.random() * activeMap.elites.length)] : activeMap.enemyNames[kind], spriteIndex: kind === 'boss' ? 5 + bossIndex : elite ? 4 : ({ blob:0, bat:1, wolf:2, roach:3 }[kind] ?? 0), hit: 0, wobble: rand(0, 8), bossAttackCooldown: 3.2, bossAttackWindup: 0, bossAttackCount: bossIndex, bossAttackType: 'slam', bossAimX: 0, bossAimY: 0, bossAttackRadius: 152 });
   }
   function damagePlayer(amount) {
     if (player.invuln > 0 || state !== 'running') return false;
@@ -1198,20 +1199,28 @@
     ctx.restore(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }
   function drawEnemy(e) {
-    const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius, sprite = enemySprites[e.kind];
-    const size = e.kind === 'boss' ? 132 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 48;
-    const scale = sprite?.naturalWidth ? size / Math.max(sprite.naturalWidth, sprite.naturalHeight) : 1;
-    const drawWidth = sprite?.naturalWidth ? sprite.naturalWidth * scale : size, drawHeight = sprite?.naturalHeight ? sprite.naturalHeight * scale : size;
+    const p = screenPos(e), bob = Math.sin(e.wobble) * (e.kind === 'boss' ? 1.5 : 2), r = e.radius;
+    const atlas = mapMonsterAtlases[activeMap.id], sprite = enemySprites[e.kind];
+    const size = e.kind === 'boss' ? 132 : e.elite ? 82 : e.kind === 'wolf' || e.kind === 'roach' ? 76 : 54;
+    const drawWidth = size, drawHeight = size;
     ctx.save(); ctx.translate(p.x, p.y + bob);
-    if (sprite?.complete && sprite.naturalWidth) {
-      ctx.globalAlpha = e.hit ? .72 : 1; ctx.filter = `hue-rotate(${e.mapHue || 0}deg) saturate(1.18)`;
-      ctx.drawImage(sprite, -drawWidth / 2, -drawHeight * .58, drawWidth, drawHeight);
-      ctx.filter = 'none'; ctx.globalAlpha = 1;
+    const atlasReady = atlas?.complete && atlas.naturalWidth && atlas.naturalHeight;
+    if (atlasReady) {
+      const cellW = atlas.naturalWidth / 4, cellH = atlas.naturalHeight / 2;
+      const index = clamp(e.spriteIndex ?? 0, 0, 7), col = index % 4, row = Math.floor(index / 4);
+      ctx.globalAlpha = e.hit ? .72 : 1;
+      ctx.drawImage(atlas, col * cellW + 2, row * cellH + 2, cellW - 4, cellH - 4, -size / 2, -size * .58, size, size);
+      ctx.globalAlpha = 1;
       if (e.elite) {
         ctx.strokeStyle = activeMap.accent; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 2, r + 3, r * .72, 0, 0, Math.PI * 2); ctx.stroke();
         ctx.fillStyle = activeMap.accent; ctx.fillRect(-2, -drawHeight * .64, 4, 4);
       }
       if (e.stun > 0) { ctx.strokeStyle = '#83efff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 1, r + 4, r * .72, 0, 0, Math.PI * 2); ctx.stroke(); }
+    } else if (sprite?.complete && sprite.naturalWidth) {
+      const scale = size / Math.max(sprite.naturalWidth, sprite.naturalHeight);
+      ctx.globalAlpha = e.hit ? .72 : 1;
+      ctx.drawImage(sprite, -sprite.naturalWidth * scale / 2, -sprite.naturalHeight * scale * .58, sprite.naturalWidth * scale, sprite.naturalHeight * scale);
+      ctx.globalAlpha = 1;
     } else {
       const statusColor = e.poisonTimer > 0 ? '#78ed6f' : e.slowTimer > 0 ? '#66caff' : e.vulnerableTimer > 0 ? '#ff79c8' : e.color;
       ctx.fillStyle = e.stun > 0 ? '#83efff' : e.hit ? '#fff' : statusColor;
