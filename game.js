@@ -394,7 +394,7 @@
         if(!h.hit&&Math.hypot(player.x-h.x,player.y-h.y)<h.r+14){h.hit=true;damagePlayer(h.damage);}
       } else if(h.type==='ring'){
         const d=Math.hypot(player.x-h.x,player.y-h.y),radius=h.r0+(h.r1-h.r0)*clamp(h.age/h.life,0,1),ang=Math.atan2(player.y-h.y,player.x-h.x),gap=Math.abs(Math.atan2(Math.sin(ang-h.gap),Math.cos(ang-h.gap)));
-        if(Math.abs(d-radius)<28+14&&(h.gapSize>Math.PI*2||gap>h.gapSize/2)&&!h.hit){h.hit=true;damagePlayer(h.damage);}
+        if(h.damage>0&&Math.abs(d-radius)<28+14&&(h.gapSize>Math.PI*2||gap>h.gapSize/2)&&!h.hit){h.hit=true;damagePlayer(h.damage);}
       } else if(h.type==='box'){
         const dx=player.x-h.x,dy=player.y-h.y,c=Math.cos(-h.angle),s=Math.sin(-h.angle),lx=dx*c-dy*s,ly=dx*s+dy*c;
         const inside=Math.abs(lx)<h.width/2&&Math.abs(ly)<h.height/2, escaped=lx>h.width/2-18&&Math.abs(ly)<h.gap/2;
