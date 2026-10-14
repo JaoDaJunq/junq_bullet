@@ -435,7 +435,8 @@
   }
   function drawBossHazardSprite(hazard, point) {
     const atlas = bossVfxAtlases[activeMap.id], row = bossVfxRows[activeMap.id]?.[hazard.kind];
-    if (!atlas || !atlas.complete || !atlas.naturalWidth || row == null) return;
+    if (row == null) return false;
+    if (!atlas || !atlas.complete || !atlas.naturalWidth) return true;
     const cellW = atlas.naturalWidth / 4, cellH = atlas.naturalHeight / 4;
     const frame = Math.floor(hazard.age * 9) % 4;
     let x = point.x, y = point.y, width = 110, height = 90, angle = 0;
@@ -472,11 +473,12 @@
     ctx.translate(x,y); ctx.rotate(angle);
     ctx.drawImage(atlas, frame * cellW, row * cellH, cellW, cellH, -width/2, -height/2, width, height);
     ctx.restore();
+    return true;
   }
   function drawBossHazards() {
     for(const h of bossHazards){
       const p=screenPos(h),fade=h.delay>0?.45:clamp(Math.min(h.life*2,1),.18,1);
-      drawBossHazardSprite(h,p);
+      if (drawBossHazardSprite(h,p)) continue;
       ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=fade;
       ctx.strokeStyle=h.color;ctx.fillStyle=h.color;ctx.lineCap='round';ctx.lineJoin='round';
       if(h.type==='projectile'){
