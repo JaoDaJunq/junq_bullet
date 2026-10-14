@@ -349,13 +349,17 @@
       case 'decoy-wave':
         for(let i=0;i<3;i++) addBossHazard({ type:'ring', kind:i===1?'marked-clone':'decoy', x:tx+Math.cos(a+i*2.1)*180, y:ty+Math.sin(a+i*2.1)*130, r0:20, r1:i===1?210:135, gap:i===1?a+Math.PI:0, gapSize:i===1?.52:6.28, color:i===1?'#ff55ee':'#8a6cff', damage:i===1?22:0, life:1 }); break;
       case 'serve-barrage':
-        for(let i=0;i<3;i++) addBossHazard({ type:'circle', kind:'serve', x:tx+Math.cos(a+i*2.1)*155, y:ty+Math.sin(a+i*2.1)*125, r:58, color:'#ffd45b', damage:18, delay:i*.27, life:.34 }); break;
+        for(let i=0;i<3;i++){
+          const sx=x+Math.cos(a+i*2.1)*26,sy=y+Math.sin(a+i*2.1)*26,px=tx+Math.cos(a+i*2.1)*155,py=ty+Math.sin(a+i*2.1)*125,d=Math.hypot(px-sx,py-sy)||1;
+          addBossHazard({type:'projectile',kind:'serve',x:sx,y:sy,targetX:px,targetY:py,vx:(px-sx)/d*420,vy:(py-sy)/d*420,r:15,color:'#ffd45b',damage:12,bounceCount:2,bounceSeed:i,life:3});
+        }
+        break;
       case 'spike-wave':
         addBossHazard({ type:'ring', kind:'spike', x, y, r0:28, r1:360, gap:a, gapSize:.58, color:'#ffe08a', damage:22, life:1.05 }); break;
       case 'foul-box':
         addBossHazard({ type:'box', kind:'foul', x:tx, y:ty, angle:a, width:250, height:190, gap:68, color:'#f5f1ff', damage:22, life:.55 }); break;
       case 'sonic-rings':
-        for(let i=0;i<4;i++) addBossHazard({ type:'ring', kind:'sonic', x, y, r0:18+i*28, r1:390, gap:a+i*.7, gapSize:.64, color:'#d9c6ff', damage:17, delay:i*.24, life:1.05 }); break;
+        for(let i=0;i<4;i++) addBossHazard({ type:'ring', kind:'sonic', x, y, r0:18+i*28, r1:390, gap:a+i*.7, gapSize:.64, rotate:i%2?1.25:-1.25, color:'#d9c6ff', damage:17, delay:i*.24, life:1.05 }); break;
       default:
         addBossHazard({ type:'ring', x, y, r0:25, r1:240, gap:a, gapSize:.8, color, damage:18, life:1 });
     }
@@ -372,6 +376,15 @@
       if(h.type==='projectile'){
         if(h.home){const dx=player.x-h.x,dy=player.y-h.y,d=Math.hypot(dx,dy)||1;h.vx+=(dx/d*h.home-h.vx)*dt*.8;h.vy+=(dy/d*h.home-h.vy)*dt*.8;}
         h.x+=h.vx*dt;h.y+=h.vy*dt;
+        if(h.kind==='serve'&&(Math.hypot(h.targetX-h.x,h.targetY-h.y)<22||h.age>.9)){
+          const px=h.targetX,py=h.targetY;
+          addBossHazard({type:'circle',kind:'serve-impact',x:px,y:py,r:56,color:'#ffd45b',damage:16,life:.38});
+          if(h.bounceCount>0){
+            const turn=h.bounceSeed*2.1+h.bounceCount*1.45;
+            h.targetX=px+Math.cos(turn)*155;h.targetY=py+Math.sin(turn)*125;
+            const d=Math.hypot(h.targetX-h.x,h.targetY-h.y)||1;h.vx=(h.targetX-h.x)/d*420;h.vy=(h.targetY-h.y)/d*420;h.bounceCount--;h.age=0;
+          }else h.life=0;
+        }
         if(h.bounds){const b=h.bounds;if(h.x<b.x||h.x>b.x+b.w){h.vx*=-1;h.bounces--;}if(h.y<b.y||h.y>b.y+b.h){h.vy*=-1;h.bounces--;}h.x=clamp(h.x,b.x,b.x+b.w);h.y=clamp(h.y,b.y,b.y+b.h);if(h.bounces<0)h.life=0;}
         if(h.targetX!=null&&h.kind==='wagon'&&h.age>.32){const dx=h.targetX-h.x,dy=h.targetY-h.y,d=Math.hypot(dx,dy)||1;h.vx=dx/d*340;h.vy=dy/d*340;}
         if(h.kind==='spore'&&h.age>1.65){addBossHazard({type:'cloud',x:h.x,y:h.y,r:54,color:'#9ddd54',damage:9,life:1.5});h.life=0;}
@@ -393,7 +406,8 @@
       } else if(h.type==='circle'){
         if(!h.hit&&Math.hypot(player.x-h.x,player.y-h.y)<h.r+14){h.hit=true;damagePlayer(h.damage);}
       } else if(h.type==='ring'){
-        const d=Math.hypot(player.x-h.x,player.y-h.y),radius=h.r0+(h.r1-h.r0)*clamp(h.age/h.life,0,1),ang=Math.atan2(player.y-h.y,player.x-h.x),gap=Math.abs(Math.atan2(Math.sin(ang-h.gap),Math.cos(ang-h.gap)));
+        if(h.rotate)h.gap+=h.rotate*dt;
+        const d=Math.hypot(player.x-h.x,player.y-h.y),radius=h.r0+(h.r1-h.r0)*clamp(h.age/(h.life+h.age),0,1),ang=Math.atan2(player.y-h.y,player.x-h.x),gap=Math.abs(Math.atan2(Math.sin(ang-h.gap),Math.cos(ang-h.gap)));
         if(h.damage>0&&Math.abs(d-radius)<28+14&&(h.gapSize>Math.PI*2||gap>h.gapSize/2)&&!h.hit){h.hit=true;damagePlayer(h.damage);}
       } else if(h.type==='box'){
         const dx=player.x-h.x,dy=player.y-h.y,c=Math.cos(-h.angle),s=Math.sin(-h.angle),lx=dx*c-dy*s,ly=dx*s+dy*c;
@@ -413,6 +427,7 @@
       if(h.type==='projectile'){
         const r=h.r||12;ctx.globalAlpha*=.25;ctx.beginPath();ctx.arc(p.x,p.y,r*1.8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=fade;
         if(h.kind==='cap'){ctx.lineWidth=5;ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-r*.7,p.y);ctx.lineTo(p.x+r*.7,p.y);ctx.stroke();}
+        else if(h.kind==='serve'){ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff6c9';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,r*.45,r,Math.atan2(h.vy,h.vx),0,Math.PI*2);ctx.stroke();ctx.strokeStyle=h.color;}
         else if(h.kind==='wagon'){ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(h.vy,h.vx));ctx.fillRect(-24,-13,48,26);ctx.strokeRect(-24,-13,48,26);}
         else{ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff4d5';ctx.beginPath();ctx.arc(p.x-r*.25,p.y-r*.25,3,0,Math.PI*2);ctx.fill();}
       } else if(h.type==='circle'||h.type==='cloud'||h.type==='vortex'){
