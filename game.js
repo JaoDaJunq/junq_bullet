@@ -54,11 +54,11 @@
   let batteryReserved = 0, coffeeTimer = 0, shieldHits = 0, doubleXpOrbs = 0;
   const MAX_ENEMIES = 50, MAX_PARTICLES = 160, MAX_XP_ORBS = 100;
   const runMaps = [
-    { id:'rain-alley', spriteAtlas:'assets/monsters-rain-alley.png.b64.txt', name:'Beco das Chuvas', motif:'rain', wash:'rgba(25,92,125,.2)', accent:'#58d9ff', hue:12, enemyPool:['blob','bat','wolf','roach'], enemyNames:{blob:'Gosma de Sarjeta',bat:'Morcego do Fio',wolf:'Rato de Beco',roach:'Barata Blindada'}, elites:['Rato Barrigudo','Barata Blindada'], bosses:[{name:'Mestre do Bueiro',hue:0},{name:'Enxurrada Viva',hue:85}] },
-    { id:'spore-square', spriteAtlas:'assets/monsters-spore-square.png.b64.txt', name:'Praça dos Esporos', motif:'spores', wash:'rgba(70,111,61,.22)', accent:'#a9f36c', hue:72, enemyPool:['blob','blob','bat','wolf','roach'], enemyNames:{blob:'Gosma Esporulada',bat:'Mariposa de Esporos',wolf:'Rastejante de Raiz',roach:'Besouro-Musgo'}, elites:['Caranguejo de Raiz','Cogumelo Couraçado'], bosses:[{name:'Rainha Esporo',hue:0},{name:'O Jardineiro',hue:115}] },
-    { id:'flooded-gallery', spriteAtlas:'assets/monsters-flooded-gallery.png.b64.txt', name:'Galeria Submersa', motif:'water', wash:'rgba(18,94,134,.23)', accent:'#5de8ed', hue:165, enemyPool:['bat','roach','blob','roach','wolf'], enemyNames:{blob:'Mímico de Sacola',bat:'Enguia Elétrica',wolf:'Caranguejo de Dreno',roach:'Barata D’Água'}, elites:['Enguia de Neon','Mímico Gigante'], bosses:[{name:'Tubarão do Subsolo',hue:0},{name:'Trem Fantasma',hue:75}] },
-    { id:'dead-arcade', spriteAtlas:'assets/monsters-dead-arcade.png.b64.txt', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
-    { id:'underpass-court', spriteAtlas:'assets/monsters-underpass-court.png.b64.txt', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
+    { id:'rain-alley', spriteAtlas:'assets/map-assets-v2/rain-alley-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/rain-alley-props.webp.b64.txt', name:'Beco das Chuvas', motif:'rain', wash:'rgba(25,92,125,.2)', accent:'#58d9ff', hue:12, enemyPool:['blob','bat','wolf','roach'], enemyNames:{blob:'Gosma de Sarjeta',bat:'Morcego do Fio',wolf:'Rato de Beco',roach:'Barata Blindada'}, elites:['Rato Barrigudo','Barata Blindada'], bosses:[{name:'Mestre do Bueiro',hue:0},{name:'Enxurrada Viva',hue:85}] },
+    { id:'spore-square', spriteAtlas:'assets/map-assets-v2/spore-square-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/spore-square-props.webp.b64.txt', name:'Praça dos Esporos', motif:'spores', wash:'rgba(70,111,61,.22)', accent:'#a9f36c', hue:72, enemyPool:['blob','blob','bat','wolf','roach'], enemyNames:{blob:'Gosma Esporulada',bat:'Mariposa de Esporos',wolf:'Rastejante de Raiz',roach:'Besouro-Musgo'}, elites:['Caranguejo de Raiz','Cogumelo Couraçado'], bosses:[{name:'Rainha Esporo',hue:0},{name:'O Jardineiro',hue:115}] },
+    { id:'flooded-gallery', spriteAtlas:'assets/map-assets-v2/flooded-gallery-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/flooded-gallery-props.webp.b64.txt', name:'Galeria Submersa', motif:'water', wash:'rgba(18,94,134,.23)', accent:'#5de8ed', hue:165, enemyPool:['bat','roach','blob','roach','wolf'], enemyNames:{blob:'Mímico de Sacola',bat:'Enguia Elétrica',wolf:'Caranguejo de Dreno',roach:'Barata D’Água'}, elites:['Enguia de Neon','Mímico Gigante'], bosses:[{name:'Tubarão do Subsolo',hue:0},{name:'Trem Fantasma',hue:75}] },
+    { id:'dead-arcade', spriteAtlas:'assets/map-assets-v2/dead-arcade-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/dead-arcade-props.webp.b64.txt', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
+    { id:'underpass-court', spriteAtlas:'assets/map-assets-v2/underpass-court-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/underpass-court-props.webp.b64.txt', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
   ];
   let activeMap = runMaps[0], bossWave = 0, bossesDefeated = 0, previousMapId = '';
   try { previousMapId = localStorage.getItem('junqBulletLastMap') || ''; } catch (_) {}
@@ -93,7 +93,9 @@
   };
   const enemySprites = {};
   for (const kind of ['blob', 'bat', 'wolf', 'roach', 'boss']) { enemySprites[kind] = new Image(); enemySprites[kind].src = `assets/enemy-${kind}.png`; }
-  const mapMonsterAtlases = Object.fromEntries(runMaps.map(map => { const image = new Image(); fetch(map.spriteAtlas).then(response => response.text()).then(encoded => { image.src = `data:image/png;base64,${encoded.trim()}`; }).catch(() => {}); return [map.id, image]; }));
+  const loadMapAtlas = (path) => { const image = new Image(); fetch(path).then(response => { if (!response.ok) throw new Error('Map asset unavailable'); return response.text(); }).then(encoded => { image.src = `data:image/webp;base64,${encoded.trim()}`; }).catch(() => {}); return image; };
+  const mapMonsterAtlases = Object.fromEntries(runMaps.map(map => [map.id, loadMapAtlas(map.spriteAtlas)]));
+  const mapPropAtlases = Object.fromEntries(runMaps.map(map => [map.id, loadMapAtlas(map.propAtlas)]));
   const toastSprite = new Image();
   toastSprite.src = 'assets/toastada-gorda.png';
   const atlasFrames = [
@@ -995,6 +997,16 @@
       const chance = mapHash(gx, gy); if (chance < .2) continue;
       const x = gx * cell - player.x + w / 2 + 28 + mapHash(gx + 19, gy + 7) * 160;
       const y = gy * cell - player.y + h / 2 + 26 + mapHash(gx + 3, gy + 29) * 150;
+      const propAtlas = mapPropAtlases[activeMap.id];
+      if (chance > .43 && propAtlas?.complete && propAtlas.naturalWidth && propAtlas.naturalHeight) {
+        const propCellW = propAtlas.naturalWidth / 3, propCellH = propAtlas.naturalHeight / 3;
+        const propIndex = Math.min(8, Math.floor(mapHash(gx + 71, gy - 43) * 9));
+        const propSize = 38 + mapHash(gx + 53, gy + 61) * 16;
+        ctx.globalAlpha = .92;
+        ctx.drawImage(propAtlas, (propIndex % 3) * propCellW, Math.floor(propIndex / 3) * propCellH, propCellW, propCellH, x - propSize / 2, y - propSize / 2, propSize, propSize);
+        ctx.globalAlpha = 1;
+        continue;
+      }
       ctx.globalAlpha = .18 + chance * .14; ctx.strokeStyle = activeMap.accent; ctx.fillStyle = activeMap.accent;
       if (activeMap.motif === 'rain') {
         ctx.beginPath(); ctx.ellipse(x, y, 24 + chance * 18, 7 + chance * 4, chance * 2, 0, Math.PI * 2); ctx.stroke();
