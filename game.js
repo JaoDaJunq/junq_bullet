@@ -60,6 +60,20 @@
     { id:'dead-arcade', spriteAtlas:'assets/map-assets-v2/dead-arcade-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/dead-arcade-props.webp.b64.txt', name:'Fliperama Desativado', motif:'arcade', wash:'rgba(95,34,116,.22)', accent:'#ed62ff', hue:265, enemyPool:['bat','bat','roach','blob','wolf'], enemyNames:{blob:'Glitch Gosmento',bat:'Mariposa de CRT',wolf:'Gabinete Andante',roach:'Joysticabra'}, elites:['Gabinete Possuído','Mestre dos Pixels'], bosses:[{name:'A Garra Gigante',hue:0},{name:'Glitch Supremo',hue:115}] },
     { id:'underpass-court', spriteAtlas:'assets/map-assets-v2/underpass-court-monsters.webp.b64.txt', propAtlas:'assets/map-assets-v2/underpass-court-props.webp.b64.txt', name:'Quadra do Viaduto', motif:'court', wash:'rgba(104,91,38,.21)', accent:'#ffd45b', hue:42, enemyPool:['wolf','wolf','bat','blob','roach'], enemyNames:{blob:'Bola-Mímico',bat:'Pombo da Quadra',wolf:'Pneu Saltador',roach:'Inseto de Concreto'}, elites:['Goleiro de Concreto','Centopeia de Pneus'], bosses:[{name:'Rei da Quadra',hue:0},{name:'O Juiz',hue:100}] }
   ];
+  const bossVfxAtlases = Object.create(null);
+  for (const map of runMaps) {
+    const image = new Image();
+    image.src = `assets/boss-vfx/${map.id}.png`;
+    bossVfxAtlases[map.id] = image;
+  }
+  const bossVfxRows = {
+    'rain-alley': { cap:0, fountain:1, water:2, vortex:3 },
+    'spore-square': { ring:0, spore:1, cloud:1, root:2, thorns:3 },
+    'flooded-gallery': { shark:0, breach:1, train:2, wagon:3 },
+    'dead-arcade': { claw:0, arm:1, pixel:2, decoy:3, 'marked-clone':3 },
+    'underpass-court': { serve:0, 'serve-impact':0, spike:1, foul:2, sonic:3 }
+  };
+
   let activeMap = runMaps[0], bossWave = 0, bossesDefeated = 0, previousMapId = '';
   try { previousMapId = localStorage.getItem('junqBulletLastMap') || ''; } catch (_) {}
   const mapBadge = document.createElement('span');
@@ -419,9 +433,50 @@
       if(h.life<=0)bossHazards.splice(i,1);
     }
   }
+  function drawBossHazardSprite(hazard, point) {
+    const atlas = bossVfxAtlases[activeMap.id], row = bossVfxRows[activeMap.id]?.[hazard.kind];
+    if (!atlas || !atlas.complete || !atlas.naturalWidth || row == null) return;
+    const cellW = atlas.naturalWidth / 4, cellH = atlas.naturalHeight / 4;
+    const frame = Math.floor(hazard.age * 9) % 4;
+    let x = point.x, y = point.y, width = 110, height = 90, angle = 0;
+    if (hazard.type === 'projectile') {
+      const sizes = { cap:88, spore:76, wagon:126, serve:80 };
+      width = sizes[hazard.kind] || Math.max(72, (hazard.r || 12) * 5);
+      height = width * .67;
+      angle = Math.atan2(hazard.vy || 0, hazard.vx || 1);
+    } else if (hazard.type === 'circle' || hazard.type === 'cloud' || hazard.type === 'vortex') {
+      const sizes = { fountain:190, breach:275, pixel:150 };
+      width = sizes[hazard.kind] || Math.max(130, (hazard.r || 60) * (hazard.type === 'vortex' ? 2.15 : 2));
+      height = width * .72;
+      if (hazard.type === 'vortex') height = width;
+    } else if (hazard.type === 'ring') {
+      width = Math.max(260, hazard.r1 * 1.5);
+      height = width * .78;
+    } else if (hazard.type === 'line') {
+      const a = screenPos({x:hazard.x,y:hazard.y}), b = screenPos({x:hazard.x2,y:hazard.y2});
+      x = (a.x + b.x) / 2; y = (a.y + b.y) / 2;
+      width = Math.max(150, Math.hypot(b.x-a.x,b.y-a.y));
+      height = 112; angle = Math.atan2(b.y-a.y,b.x-a.x);
+    } else if (hazard.type === 'movingLine' || hazard.type === 'rotatingLine') {
+      width = Math.max(190, hazard.length);
+      height = Math.max(105, hazard.width * 2.1);
+      angle = hazard.kind === 'shark' ? hazard.angle : hazard.type === 'rotatingLine' ? hazard.angle : hazard.angle + Math.PI / 2;
+    } else if (hazard.type === 'box') {
+      const sizes = { claw:[250,205], foul:[360,290] };
+      [width,height] = sizes[hazard.kind] || [300,230];
+      angle = hazard.angle || 0;
+    }
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = hazard.delay > 0 ? .62 : .9;
+    ctx.translate(x,y); ctx.rotate(angle);
+    ctx.drawImage(atlas, frame * cellW, row * cellH, cellW, cellH, -width/2, -height/2, width, height);
+    ctx.restore();
+  }
   function drawBossHazards() {
     for(const h of bossHazards){
       const p=screenPos(h),fade=h.delay>0?.45:clamp(Math.min(h.life*2,1),.18,1);
+      drawBossHazardSprite(h,p);
       ctx.save();ctx.globalCompositeOperation='lighter';ctx.globalAlpha=fade;
       ctx.strokeStyle=h.color;ctx.fillStyle=h.color;ctx.lineCap='round';ctx.lineJoin='round';
       if(h.type==='projectile'){
